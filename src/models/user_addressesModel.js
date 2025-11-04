@@ -7,9 +7,7 @@ const getUsersAddresses = async (city) => {
 
     // Adiciona condições de busca se a cidade for fornecida
     if (city && city.trim()) {
-       
         params.push(`%${city.trim()}%`);
-
         conditions.push(`user_addresses.city ILIKE $${params.length}`);
     }
 
@@ -17,51 +15,125 @@ const getUsersAddresses = async (city) => {
         query += " WHERE " + conditions.join(" AND ");
     }
 
-    // Executa a consulta no banco de dados
-    const result = await pool.query(query, params);
-    return result.rows;
+    try {
+        // Executa a consulta no banco de dados
+        const result = await pool.query(query, params);
+        return result.rows;
+    } catch (error) {
+        throw new Error(`Erro ao buscar endereços: ${error.message}`);
+    }
 };
-
 
 // Função para buscar um endereço de usuário pelo ID
 const getUserAddressById = async (id) => {
-    const result = await pool.query("SELECT * FROM user_addresses WHERE id = $1", [id]);
-    return result.rows[0];
+    try {
+        const result = await pool.query("SELECT * FROM user_addresses WHERE id = $1", [id]);
+        if (result.rows.length === 0) {
+            throw new Error("Endereço não encontrado.");
+        }
+        return result.rows[0];
+    } catch (error) {
+        throw new Error(`Erro ao buscar endereço pelo ID: ${error.message}`);
+    }
 };
 
 // Função para criar um novo endereço de usuário
 const createUserAddress = async (user_id, cep, street, number, neighborhood, city, state, complement, reference_point, is_default) => {
-    const result = await pool.query(
-        "INSERT INTO user_addresses (user_id, cep, street, number, neighborhood, city, state, complement, reference_point, is_default) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-        [user_id, cep, street, number, neighborhood, city, state, complement, reference_point, is_default]
-    );
-    return result.rows[0];
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        if (is_default) {
+            await client.query(
+                'UPDATE user_addresses SET is_default = false WHERE user_id = $1',
+                [user_id]
+            );
+        }
+
+        const result = await client.query(
+            "INSERT INTO user_addresses (user_id, cep, street, number, neighborhood, city, state, complement, reference_point, is_default) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+            [user_id, cep, street, number, neighborhood, city, state, complement, reference_point, is_default]
+        );
+
+        await client.query('COMMIT');
+        return result.rows[0];
+    } catch (err) {
+        await client.query('ROLLBACK');
+        throw new Error(`Erro ao criar endereço: ${err.message}`);
+    } finally {
+        client.release();
+    }
 };
 
+// Função para atualizar os dados de um endereço.
+const updateUserAddress = async (id, cep, street, number, neighborhood, city, state, complement, reference_point, is_default) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
 
-// Função para atualizar os dados de um usuário
-const updateUserAddress = async (user_id, cep, street, number, neighborhood, city, state, complement, reference_point, is_default) => {
-    // Verifica se o usuário existe
-    const currentUser = await pool.query("SELECT * FROM user_addresses WHERE user_id = $1", [user_id]);
-    if (!currentUser.rows[0]) {
-        throw new Error("User not found");
+        // trava o registro para evitar condições de corrida e pega user_id
+        const currentRes = await client.query('SELECT * FROM user_addresses WHERE id = $1 FOR UPDATE', [id]);
+        const current = currentRes.rows[0];
+        if (!current) {
+            throw new Error('Endereço não encontrado para atualização.');
+        }
+
+        // decide valores atualizados (preserva falsy se explicitamente passado)
+        const updatedCep = (cep !== undefined) ? cep : current.cep;
+        const updatedStreet = (street !== undefined) ? street : current.street;
+        const updatedNumber = (number !== undefined) ? number : current.number;
+        const updatedNeighborhood = (neighborhood !== undefined) ? neighborhood : current.neighborhood;
+        const updatedCity = (city !== undefined) ? city : current.city;
+        const updatedState = (state !== undefined) ? state : current.state;
+        const updatedComplement = (complement !== undefined) ? complement : current.complement;
+        const updatedReferencePoint = (reference_point !== undefined) ? reference_point : current.reference_point;
+        const updatedIsDefault = (is_default !== undefined) ? Boolean(is_default) : current.is_default;
+
+        // Se o endereço for para virar default, desmarca outros endereços do mesmo usuário
+        if (updatedIsDefault === true) {
+            await client.query(
+                'UPDATE user_addresses SET is_default = false WHERE user_id = $1 AND id != $2',
+                [current.user_id, id]
+            );
+        }
+
+        // atualiza este registro
+        const result = await client.query(
+            `UPDATE user_addresses
+       SET cep = $1, street = $2, number = $3, neighborhood = $4, city = $5, state = $6,
+           complement = $7, reference_point = $8, is_default = $9
+       WHERE id = $10
+       RETURNING *`,
+            [updatedCep, updatedStreet, updatedNumber, updatedNeighborhood, updatedCity, updatedState, updatedComplement, updatedReferencePoint, updatedIsDefault, id]
+        );
+
+        await client.query('COMMIT');
+        return result.rows[0];
+    } catch (err) {
+        await client.query('ROLLBACK');
+        throw new Error(`Erro ao atualizar endereço: ${err.message}`);
+    } finally {
+        client.release();
     }
+};
 
-    // Atualiza os campos com os valores fornecidos ou mantém os valores atuais
-    const updatedCep = cep || currentUser.rows[0].cep;
-    const updatedStreet = street || currentUser.rows[0].street;
-    const updatedNumber = number || currentUser.rows[0].number;
-    const updatedNeighborhood = neighborhood || currentUser.rows[0].neighborhood;
-    const updatedCity = city || currentUser.rows[0].city;
-    const updatedState = state || currentUser.rows[0].state;
-    const updatedComplement = complement || currentUser.rows[0].complement;
-    const updatedReferencePoint = reference_point || currentUser.rows[0].reference_point;
-    const updatedIsDefault = is_default !== undefined ? is_default : currentUser.rows[0].is_default;
+// Função para deletar um endereço de usuário
+const deleteUserAddress = async (id) => {
+    try {
+        const result = await pool.query("DELETE FROM user_addresses WHERE id = $1 RETURNING *", [id]);
+        if (result.rows.length === 0) {
+            throw new Error("Endereço não encontrado para exclusão.");
+        }
+        return result.rows[0];
+    } catch (error) {
+        throw new Error(`Erro ao deletar endereço: ${error.message}`);
+    }
+};
 
-    // Executa a atualização no banco de dados
-    const result = await pool.query(
-        "UPDATE user_addresses SET cep = $1, street = $2, number = $3, neighborhood = $4, city = $5, state = $6, complement = $7, reference_point = $8, is_default = $9 WHERE user_id = $10 RETURNING *",
-        [updatedCep, updatedStreet, updatedNumber, updatedNeighborhood, updatedCity, updatedState, updatedComplement, updatedReferencePoint, updatedIsDefault, user_id]
-    );
-    return result.rows[0];
+module.exports = {
+    getUsersAddresses,
+    getUserAddressById,
+    createUserAddress,
+    updateUserAddress,
+    deleteUserAddress,
 };
