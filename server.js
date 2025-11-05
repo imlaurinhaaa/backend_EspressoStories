@@ -5,6 +5,7 @@ const cartsRoutes = require("./src/routes/cartsRoutes");
 const userRoutes = require("./src/routes/userRoutes");
 const user_addressesRoutes = require("./src/routes/user_addressesRoutes");
 const categoriesRoutes = require("./src/routes/categoriesRoutes");
+const cart_itemsRoutes = require("./src/routes/cart_itemsRoutes");
 
 const app = express();  
 app.use(cors()); 
@@ -14,6 +15,7 @@ app.use("/api", cartsRoutes);
 app.use("/api", userRoutes);
 app.use("/api", user_addressesRoutes);
 app.use("/api", categoriesRoutes);
+app.use("/api", cart_itemsRoutes);
 
 const PORT = process.env.PORT || 4000;  
 
