@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const user_addressesController = require("../controllers/user_addressesController");
-const upload = multer({ dest: "uploads/" });
 
 router.get("/user_addresses", user_addressesController.getUsersAddresses);
 router.get("/user_addresses/:id", user_addressesController.getUserAddressById);
 router.post("/user_addresses", user_addressesController.createUserAddress);
 router.put("/user_addresses/:id", user_addressesController.updateUserAddress);
 router.delete("/user_addresses/:id", user_addressesController.deleteUserAddress);
+
+module.exports = router;
