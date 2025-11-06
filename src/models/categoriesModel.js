@@ -11,7 +11,7 @@ const getCategories = async (name) => {
 
         params.push(`%${name.trim()}%`);
 
-        conditions.push(`users.name ILIKE $${params.length}`);
+        conditions.push(`categories.name ILIKE $${params.length}`);
     }
 
     if (conditions.length > 0) {

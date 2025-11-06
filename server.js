@@ -7,6 +7,8 @@ const user_addressesRoutes = require("./src/routes/user_addressesRoutes");
 const categoriesRoutes = require("./src/routes/categoriesRoutes");
 const cart_itemsRoutes = require("./src/routes/cart_itemsRoutes");
 const branchesRoutes = require("./src/routes/branchesRoutes");
+const productsRoutes = require("./src/routes/productsRoutes");
+const featureProductRoutes = require("./src/routes/featureProductRoutes");
 
 const app = express();  
 app.use(cors()); 
@@ -18,6 +20,8 @@ app.use("/api", user_addressesRoutes);
 app.use("/api", categoriesRoutes);
 app.use("/api", cart_itemsRoutes);
 app.use("/api", branchesRoutes);
+app.use("/api", productsRoutes);
+app.use("/api", featureProductRoutes);
 
 const PORT = process.env.PORT || 4000;  
 
