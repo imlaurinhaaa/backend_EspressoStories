@@ -1,13 +1,13 @@
 const pool = require("../config/database");
 
-const getOrders = async (city) => {
+const getOrders = async (user_id) => {
     let query = "SELECT orders.* FROM orders";
     let conditions = [];
     let params = [];
 
-    if (city && city.trim()) {
-        params.push(`%${city.trim()}%`);
-        conditions.push(`orders.city ILIKE $${params.length}`);
+    if (user_id && user_id.trim()) {
+        params.push(`%${user_id.trim()}%`);
+        conditions.push(`orders.user_id ILIKE $${params.length}`);
     }
 
     if (conditions.length > 0) {
@@ -34,11 +34,11 @@ const getOrdersById = async (id) => {
     }
 };
 
-const createOrders = async (name, cep, street, number, neighborhood, city, state, complement, reference_point) => {
+const createOrders = async (user_id, branch_id, user_addresses, request_date, payment_method, payment_status, status, total_value, observations) => {
     try {
         const result = await pool.query(
-            "INSERT INTO orders (name, cep, street, number, neighborhood, city, state, complement, reference_point) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
-            [name, cep, street, number, neighborhood, city, state, complement, reference_point]
+            "INSERT INTO orders (user_id, branch_id, user_addresses, request_date, payment_method, payment_status, status, total_value, observations) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+            [user_id, branch_id, user_addresses, request_date, payment_method, payment_status, status, total_value, observations]
         );
         return result.rows[0];
     } catch (error) {
@@ -47,26 +47,26 @@ const createOrders = async (name, cep, street, number, neighborhood, city, state
     }
 };
 
-const updateOrders = async (id, name, cep, street, number, neighborhood, city, state, complement, reference_point) => {
+const updateOrders = async (id, user_id, branch_id, user_addresses, request_date, payment_method, payment_status, status, total_value, observations) => {
     try {
         const currentOrder = await pool.query("SELECT * FROM orders WHERE id = $1", [id]);
         if (!currentOrder.rows[0]) {
             throw new Error("Encomenda não encontrada para atualização.");
         }
 
-        const updatedName = (name !== undefined) ? name : currentOrder.rows[0].name
-        const updatedCep = (cep !== undefined) ? cep : currentOrder.rows[0].cep
-        const updatedStreet = (street !== undefined) ? street : currentOrder.rows[0].street
-        const updatedNumber = (number !== undefined) ? number : currentOrder.rows[0].number
-        const updatedNeighborhood = (neighborhood !== undefined) ? neighborhood : currentOrder.rows[0].neighborhood
-        const updatedCity = (city !== undefined) ? city : currentOrder.rows[0].city
-        const updatedState = (state !== undefined) ? state : currentOrder.rows[0].state
-        const updatedComplement = (complement !== undefined) ? complement : currentOrder.rows[0].complement
-        const updatedReferencePoint = (reference_point !== undefined) ? reference_point : currentOrder.rows[0].reference_point
+        const updatedUserId = (user_id !== undefined) ? user_id : currentOrder.rows[0].user_id
+        const updatedBranchId = (branch_id !== undefined) ? branch_id : currentOrder.rows[0].branch_id
+        const updatedUserAddresses = (user_addresses !== undefined) ? user_addresses : currentOrder.rows[0].user_addresses
+        const updatedRequestDate = (request_date !== undefined) ? request_date : currentOrder.rows[0].request_date
+        const updatedPaymentMethod = (payment_method !== undefined) ? payment_method : currentOrder.rows[0].payment_method
+        const updatedPaymentStatus = (payment_status !== undefined) ? payment_status : currentOrder.rows[0].payment_status
+        const updatedStatus = (status !== undefined) ? status : currentOrder.rows[0].status
+        const updatedTotalValue = (total_value !== undefined) ? total_value : currentOrder.rows[0].total_value
+        const updatedObservations = (observations !== undefined) ? observations : currentOrder.rows[0].observations
 
         const result = await pool.query(
-            "UPDATE orders set name = $1, cep = $2, street = $3, number = $4, neighborhood = $5, city = $6, state = $7, complement = $8, reference_point = $9 WHERE id = $10 RETURNING *",
-            [updatedName, updatedCep, updatedStreet, updatedNumber, updatedNeighborhood, updatedCity, updatedReferencePoint, updatedState, updatedComplement, id]
+            "UPDATE orders set user_id = $1, branch_id = $2, user_addresses = $3, request_date = $4, payment_method = $5, payment_status = $6, status = $7, total_value = $8, observations = $9 WHERE id = $10 RETURNING *",
+            [updatedUserId, updatedBranchId,updatedUserAddresses, updatedRequestDate, updatedPaymentMethod, updatedPaymentStatus, updatedStatus, updatedTotalValue, updatedObservations, id]
         );
         return result.rows[0];
     } catch (error) {
