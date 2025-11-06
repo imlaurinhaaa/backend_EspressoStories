@@ -2,8 +2,8 @@ const ordersModel = require("../models/ordersModel");
 
 const getOrders = async (req, res) => {
     try {
-        const { city } = req.query;
-        const orders = await ordersModel.getOrders(city);
+        const { user_id } = req.query;
+        const orders = await ordersModel.getOrders(user_id);
         res.status(200).json({ message: "Encomendas encontradas com sucesso.", orders });
     } catch (error) {
         console.error(error);
@@ -26,13 +26,13 @@ const getOrdersById = async (req, res) => {
 
 const createOrders = async (req, res) => {
     try {
-        const { name, cep, street, number, neighborhood, city, state, complement, reference_point } = req.body;
+        const { user_id, branch_id, user_addresses, request_date, payment_method, payment_status, status, total_value, observations } = req.body;
 
-        if (!name || !cep || !street || !number || !neighborhood || !city || !state || !complement || !reference_point) {
+        if (!user_id || !branch_id || !user_addresses || !request_date || !payment_method || !payment_status || !status || !total_value || !observations) {
             return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });
         }
 
-        const newOrder = await ordersModel.createOrders(name, cep, street, number, neighborhood, city, state, complement, reference_point);
+        const newOrder = await ordersModel.createOrders(user_id, branch_id, user_addresses, request_date, payment_method, payment_status, status, total_value, observations);
 
         return res.status(201).json({ message: "Encomenda criada com sucesso.", newOrder });
     } catch (error) {
@@ -43,8 +43,8 @@ const createOrders = async (req, res) => {
 
 const updateOrder = async (req, res) => {
     try {
-        const { name, cep, street, number, neighborhood, city, state, complement, reference_point } = req.body;
-        const updatedOrder = await ordersModel.updateOrders(req.params.id, name, cep, street, number, neighborhood, city, state, complement, reference_point);
+        const { user_id, branch_id, user_addresses, request_date, payment_method, payment_status, status, total_value, observations } = req.body;
+        const updatedOrder = await ordersModel.updateOrders(req.params.id, user_id, branch_id, user_addresses, request_date, payment_method, payment_status, status, total_value, observations);
 
         if (!updatedOrder) {
             return res.status(404).json({ message: "Encomenda não encontrada para atualização." });
