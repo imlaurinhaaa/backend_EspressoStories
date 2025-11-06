@@ -1,0 +1,72 @@
+const ordersModel = require("../models/ordersModel");
+
+const getOrders = async (req, res) => {
+    try {
+        const { city } = req.query;
+        const orders = await ordersModel.getOrders(city);
+        res.status(200).json({ message: "Encomendas encontradas com sucesso.", orders });
+    } catch (error) {
+        console.error(error);
+        res.status(400).json({ message: `Erro ao encontrar encomendas: ${error.message}` });
+    }
+};
+
+const getOrdersById = async (req, res) => {
+    try {
+        const order = await ordersModel.getOrdersById(req.params.id);
+        if (!order) {
+            return res.status(404).json({ message: "Encomenda não encontrada." });
+        }
+        res.status(200).json({ message: "Encomenda encontrada com sucesso.", order });
+    } catch (error) {
+        console.error(error);
+        res.status(404).json({ message: `Erro ao encontrar encomenda: ${error.message}` });
+    }
+};
+
+const createOrders = async (req, res) => {
+    try {
+        const { name, cep, street, number, neighborhood, city, state, complement, reference_point } = req.body;
+
+        if (!name || !cep || !street || !number || !neighborhood || !city || !state || !complement || !reference_point) {
+            return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });
+        }
+
+        const newOrder = await ordersModel.createOrders(name, cep, street, number, neighborhood, city, state, complement, reference_point);
+
+        return res.status(201).json({ message: "Encomenda criada com sucesso.", newOrder });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: `Erro ao criar encomenda: ${error.message}` });
+    }
+};
+
+const updateOrder = async (req, res) => {
+    try {
+        const { name, cep, street, number, neighborhood, city, state, complement, reference_point } = req.body;
+        const updatedOrder = await ordersModel.updateOrders(req.params.id, name, cep, street, number, neighborhood, city, state, complement, reference_point);
+
+        if (!updatedOrder) {
+            return res.status(404).json({ message: "Encomenda não encontrada para atualização." });
+        }
+        res.status(200).json({ message: "Encomenda atualizada com sucesso.", updatedOrder });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: `Erro ao atualizar encomenda: ${error.message}` });
+    }
+};
+
+const deleteOrder = async (req, res) => {
+    try {
+        const deletedOrder = await ordersModel.deleteOrders(req.params.id);
+        if (!deletedOrder) {
+            return res.status(404).json({ message: "Encomenda não encontrada para exclusão." });
+        }
+        res.status(200).json({ message: "Encomenda deletada com sucesso.", details: deletedOrder });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: `Erro ao deletar encomenda: ${error.message}` });
+    }
+};
+
+module.exports = { getOrders, getOrdersById, createOrders, updateOrder, deleteOrder };
