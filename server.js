@@ -9,6 +9,7 @@ const cart_itemsRoutes = require("./src/routes/cart_itemsRoutes");
 const branchesRoutes = require("./src/routes/branchesRoutes");
 const productsRoutes = require("./src/routes/productsRoutes");
 const featureProductRoutes = require("./src/routes/featureProductRoutes");
+const order_itemsRoutes = require("./src/routes/order_itemsRoutes");
 
 const app = express();  
 app.use(cors()); 
@@ -22,6 +23,7 @@ app.use("/api", cart_itemsRoutes);
 app.use("/api", branchesRoutes);
 app.use("/api", productsRoutes);
 app.use("/api", featureProductRoutes);
+app.use("/api", order_itemsRoutes);
 
 const PORT = process.env.PORT || 4000;  
 
