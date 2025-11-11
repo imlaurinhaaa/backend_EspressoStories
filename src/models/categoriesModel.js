@@ -64,9 +64,9 @@ const updateCategory = async (id, name, description) => {
         }
 
         // Atualiza os campos com os valores fornecidos ou mantém os valores atuais
-        const updatedName = (name !== undefined) ? name : currentCategory.rows[0].name;
-        const updatedDescription = (description !== undefined) ? description : currentCategory.rows[0].description;
-        
+        const updatedName = name?.trim() ? name : currentCategory.rows[0].name;
+        const updatedDescription = description?.trim() ? description : currentCategory.rows[0].description;
+
         // Executa a atualização no banco de dados
         const result = await pool.query(
             "UPDATE categories SET name = $1, description = $2 WHERE id = $3 RETURNING *",
@@ -79,16 +79,15 @@ const updateCategory = async (id, name, description) => {
 };
 
 // Função para deletar uma categoria
-const deleteCategory = async (req, res) => {
+const deleteCategory = async (id) => {
     try {
-        const deletedCategory = await pool.query("DELETE FROM categories WHERE id = $1 RETURNING *", [req.params.id]);
-        if (!deletedCategory.rows[0]) {
-            return res.status(404).json({ message: "Categoria não encontrada para exclusão." });
+        const result = await pool.query("DELETE FROM categories WHERE id = $1 RETURNING *", [id]);
+        if (result.rows.length === 0) {
+            throw new Error("Categoria não encontrada para exclusão.");
         }
-        res.status(200).json({ message: "Categoria deletada com sucesso.", details: deletedCategory.rows[0] });
+        return result.rows[0];
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: `Erro ao deletar categoria: ${error.message}` });
+        throw new Error(`Erro ao deletar categoria: ${error.message}`);
     }
 };
 

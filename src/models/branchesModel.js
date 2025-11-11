@@ -41,11 +41,11 @@ const getBranchById = async (id) => {
 };
 
 // Função para criar uma nova filial
-const createBranch = async (name, cep, street, number, neighborhood, city) => {
+const createBranch = async (name, cep, street, number, neighborhood, city, state, complement) => {
     try {
         const result = await pool.query(
-            "INSERT INTO branches (name, cep, street, number, neighborhood, city) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-            [name, cep, street, number, neighborhood, city]
+            "INSERT INTO branches (name, cep, street, number, neighborhood, city, state, complement) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+            [name, cep, street, number, neighborhood, city, state, complement]
         );
         return result.rows[0];
     } catch (error) {
@@ -54,9 +54,8 @@ const createBranch = async (name, cep, street, number, neighborhood, city) => {
     }
 };
 
-
 // Função para atualizar os dados de uma filial
-const updateBranch = async (id, name, cep, street, number, neighborhood, city) => {
+const updateBranch = async (id, name, cep, street, number, neighborhood, city, state, complement) => {
     try {
         // Verifica se a filial existe
         const currentBranch = await pool.query("SELECT * FROM branches WHERE id = $1", [id]);
@@ -65,17 +64,19 @@ const updateBranch = async (id, name, cep, street, number, neighborhood, city) =
         }
 
         // Atualiza os campos com os valores fornecidos ou mantém os valores atuais
-        const updatedName = (name !== undefined) ? name : currentBranch.rows[0].name;
-        const updatedCep = (cep !== undefined) ? cep : currentBranch.rows[0].cep;
-        const updatedStreet = (street !== undefined) ? street : currentBranch.rows[0].street;
-        const updatedNumber = (number !== undefined) ? number : currentBranch.rows[0].number;
-        const updatedNeighborhood = (neighborhood !== undefined) ? neighborhood : currentBranch.rows[0].neighborhood;
-        const updatedCity = (city !== undefined) ? city : currentBranch.rows[0].city;
+        const updatedName = name?.trim() ? name : currentBranch.rows[0].name;
+        const updatedCep = cep?.trim() ? cep : currentBranch.rows[0].cep;
+        const updatedStreet = street?.trim() ? street : currentBranch.rows[0].street;
+        const updatedNumber = number?.trim() ? number : currentBranch.rows[0].number;
+        const updatedNeighborhood = neighborhood?.trim() ? neighborhood : currentBranch.rows[0].neighborhood;
+        const updatedCity = city?.trim() ? city : currentBranch.rows[0].city;
+        const updatedState = state?.trim() ? state : currentBranch.rows[0].state;
+        const updatedComplement = complement?.trim() ? complement : currentBranch.rows[0].complement;
 
         // Executa a atualização no banco de dados
         const result = await pool.query(
-            "UPDATE branches SET name = $1, cep = $2, street = $3, number = $4, neighborhood = $5, city = $6 WHERE id = $7 RETURNING *",
-            [updatedName, updatedCep, updatedStreet, updatedNumber, updatedNeighborhood, updatedCity, id]
+            "UPDATE branches SET name = $1, cep = $2, street = $3, number = $4, neighborhood = $5, city = $6, state = $7, complement = $8 WHERE id = $9 RETURNING *",
+            [updatedName, updatedCep, updatedStreet, updatedNumber, updatedNeighborhood, updatedCity, updatedState, updatedComplement, id]
         );
         return result.rows[0];
     } catch (error) {
@@ -83,18 +84,16 @@ const updateBranch = async (id, name, cep, street, number, neighborhood, city) =
     }
 };
 
-
 // Função para deletar uma filial
-const deleteBranch = async (req, res) => {
+const deleteBranch = async (id) => {
     try {
-        const deletedBranch = await pool.query("DELETE FROM branches WHERE id = $1 RETURNING *", [req.params.id]);
-        if (!deletedBranch.rows[0]) {
-            return res.status(404).json({ message: "Filial não encontrada para exclusão." });
+        const result = await pool.query("DELETE FROM branches WHERE id = $1 RETURNING *", [id]);
+        if (result.rows.length === 0) {
+            throw new Error("Filial não encontrada para exclusão.");
         }
-        res.status(200).json({ message: "Filial deletada com sucesso.", details: deletedBranch.rows[0] });
+        return result.rows[0];
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: `Erro ao deletar filial: ${error.message}` });
+        throw new Error(`Erro ao deletar filial: ${error.message}`);
     }
 };
 
@@ -104,4 +103,4 @@ module.exports = {
     createBranch,
     updateBranch,
     deleteBranch
-};          
+};

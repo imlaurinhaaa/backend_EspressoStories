@@ -26,22 +26,67 @@ const getProductById = async (req, res) => {
     }
 };
 
-// Rota para criar um novo produto
 const createProduct = async (req, res) => {
     try {
-        const { category_id, name, photo, description, price, inspiration, photo_inspiration } = req.body;
+        // Logs para depuração
+        console.log("Corpo da requisição recebido:", req.body);
+        console.log("Arquivos recebidos:", req.files);
 
-        // Valida os campos obrigatórios
-        if (!name || !category_id || !photo || !description || !price ) {
-            return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });
+        // Se o body vier vazio (multer não preencheu)
+        if (!req.body || Object.keys(req.body).length === 0) {
+            return res.status(400).json({
+                message: "Nenhum dado recebido. Verifique se está enviando o formulário como 'form-data'."
+            });
         }
 
-        const newProduct = await productsModel.createProduct(category_id, name, photo, description, price, inspiration, photo_inspiration);
+        const { category_id, name, description, price, inspiration } = req.body;
 
-        return res.status(201).json({ message: "Produto criado com sucesso.", newProduct });
+        if (!category_id || !name || !description || !price || !inspiration) {
+            return res.status(400).json({
+                message: "Os campos 'category_id', 'name', 'description', 'price' e 'inspiration' são obrigatórios."
+            });
+        }
+
+        // Validação de preço
+        if (isNaN(price) || Number(price) <= 0) {
+            return res.status(400).json({
+                message: "O campo 'price' deve conter um número válido maior que zero."
+            });
+        }
+
+        // Captura das imagens enviadas
+        const photo = req.files?.photo ? req.files.photo[0].filename : null;
+        const photo_inspiration = req.files?.photo_inspiration ? req.files.photo_inspiration[0].filename : null;
+
+        // Verifica se a foto obrigatória foi enviada
+        if (!photo) {
+            return res.status(400).json({
+                message: "O campo 'photo' é obrigatório. Envie uma imagem válida."
+            });
+        }
+
+        // Criação do produto
+        const newProduct = await productsModel.createProduct(
+            category_id,
+            name,
+            photo,
+            description,
+            price,
+            inspiration,
+            photo_inspiration
+        );
+
+        console.log("✅ Produto criado com sucesso:", newProduct);
+        return res.status(201).json({
+            message: "Produto criado com sucesso.",
+            newProduct
+        });
+
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: `Erro ao criar produto: ${error.message}` });
+        console.error("❌ Erro ao criar produto:", error);
+        return res.status(500).json({
+            message: `Erro ao criar produto: ${error.message}`
+        });
     }
 };
 
@@ -70,7 +115,7 @@ const deleteProduct = async (req, res) => {
         }
         res.status(200).json({ message: "Produto deletado com sucesso.", details: deletedProduct });
     } catch (error) {
-        console.error(error);
+        console.error("Erro ao deletar produto:", error);
         res.status(500).json({ message: `Erro ao deletar produto: ${error.message}` });
     }
 };

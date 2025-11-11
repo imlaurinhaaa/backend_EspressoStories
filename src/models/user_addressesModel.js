@@ -52,7 +52,7 @@ const createUserAddress = async (user_id, cep, street, number, neighborhood, cit
 
         const result = await client.query(
             "INSERT INTO user_addresses (user_id, cep, street, number, neighborhood, city, state, complement, reference_point, is_default) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-            [user_id, cep, street, number, neighborhood, city, state, complement, reference_point, is_default]
+            [user_id, cep, street, number, neighborhood, city, state, complement, reference_point, Boolean(is_default)]
         );
 
         await client.query('COMMIT');
@@ -79,18 +79,18 @@ const updateUserAddress = async (id, cep, street, number, neighborhood, city, st
         }
 
         // decide valores atualizados (preserva falsy se explicitamente passado)
-        const updatedCep = (cep !== undefined) ? cep : current.cep;
-        const updatedStreet = (street !== undefined) ? street : current.street;
-        const updatedNumber = (number !== undefined) ? number : current.number;
-        const updatedNeighborhood = (neighborhood !== undefined) ? neighborhood : current.neighborhood;
-        const updatedCity = (city !== undefined) ? city : current.city;
-        const updatedState = (state !== undefined) ? state : current.state;
-        const updatedComplement = (complement !== undefined) ? complement : current.complement;
-        const updatedReferencePoint = (reference_point !== undefined) ? reference_point : current.reference_point;
-        const updatedIsDefault = (is_default !== undefined) ? Boolean(is_default) : current.is_default;
+        const updatedCep = cep?.trim() ? cep : current.cep;
+        const updatedStreet = street?.trim() ? street : current.street;
+        const updatedNumber = number?.trim() ? number : current.number;
+        const updatedNeighborhood = neighborhood?.trim() ? neighborhood : current.neighborhood;
+        const updatedCity = city?.trim() ? city : current.city;
+        const updatedState = state?.trim() ? state : current.state;
+        const updatedComplement = complement?.trim() ? complement : current.complement;
+        const updatedReferencePoint = reference_point?.trim() ? reference_point : current.reference_point;
+        const updatedIsDefault = is_default !== undefined ? Boolean(is_default) : current.is_default;
 
         // Se o endereço for para virar default, desmarca outros endereços do mesmo usuário
-        if (updatedIsDefault === true) {
+        if (updatedIsDefault) {
             await client.query(
                 'UPDATE user_addresses SET is_default = false WHERE user_id = $1 AND id != $2',
                 [current.user_id, id]

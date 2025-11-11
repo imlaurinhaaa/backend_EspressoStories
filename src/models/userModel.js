@@ -66,11 +66,11 @@ const updateUser = async (id, name, email, phone, password_hash, photo) => {
         }
 
         // Atualiza os campos com os valores fornecidos ou mantém os valores atuais
-        const updatedName = (name !== undefined) ? name : currentUser.rows[0].name;
-        const updatedEmail = (email !== undefined) ? email : currentUser.rows[0].email;
-        const updatedPhone = (phone !== undefined) ? phone : currentUser.rows[0].phone;
-        const updatedPasswordHash = (password_hash !== undefined) ? password_hash : currentUser.rows[0].password_hash;
-        const updatedPhoto = (photo !== undefined) ? photo : currentUser.rows[0].photo;
+        const updatedName = name?.trim() ? name : currentUser.rows[0].name;
+        const updatedEmail = email?.trim() ? email : currentUser.rows[0].email;
+        const updatedPhone = phone?.trim() ? phone : currentUser.rows[0].phone;
+        const updatedPasswordHash = password_hash?.trim() ? password_hash : currentUser.rows[0].password_hash;
+        const updatedPhoto = photo?.trim() ? photo : currentUser.rows[0].photo;
 
         // Executa a atualização no banco de dados
         const result = await pool.query(
@@ -84,16 +84,15 @@ const updateUser = async (id, name, email, phone, password_hash, photo) => {
 };
 
 // Função para deletar um usuário
-const deleteUser = async (req, res) => {
+const deleteUser = async (id) => {
     try {
-        const deletedUser = await pool.query("DELETE FROM users WHERE id = $1 RETURNING *", [req.params.id]);
+        const deletedUser = await pool.query("DELETE FROM users WHERE id = $1 RETURNING *", [id]);
         if (!deletedUser.rows[0]) {
-            return res.status(404).json({ message: "Usuário não encontrado para exclusão." });
+            throw new Error("Usuário não encontrado para exclusão.");
         }
-        res.status(200).json({ message: "Usuário deletado com sucesso.", details: deletedUser.rows[0] });
+        return deletedUser.rows[0];
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: `Erro ao deletar usuário: ${error.message}` });
+        throw new Error(`Erro ao deletar usuário: ${error.message}`);
     }
 };
 

@@ -18,17 +18,16 @@ CREATE TABLE user_addresses (
     number VARCHAR(20) NOT NULL,
     neighborhood VARCHAR(100) NOT NULL,
     city VARCHAR(100) NOT NULL,
-    state VARCHAR(2) NOT NULL, 
+    state VARCHAR(200) NOT NULL, 
     complement TEXT,
     reference_point TEXT,
     is_default BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
 );
 
 CREATE TABLE branches (
-    id SERIAL PRIMARY KEY
-    name VARCHAR(255) NOT NULL
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
     cep VARCHAR(9) NOT NULL,
     street VARCHAR(255) NOT NULL,
     number VARCHAR(20) NOT NULL,

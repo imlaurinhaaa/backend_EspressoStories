@@ -29,14 +29,14 @@ const getBranchById = async (req, res) => {
 // Rota para criar uma nova filial
 const createBranch = async (req, res) => {
     try {
-        const { name, cep, street, number, neighborhood, city } = req.body;
+        const { name, cep, street, number, neighborhood, city, state, complement } = req.body;
 
         // Valida os campos obrigatórios
-        if (!name || !cep || !street || !number || !neighborhood || !city) {
+        if (!name || !cep || !street || !number || !neighborhood || !city || !state || !complement) {
             return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });
         }
 
-        const newBranch = await branchesModels.createBranch(name, cep, street, number, neighborhood, city);
+        const newBranch = await branchesModels.createBranch(name, cep, street, number, neighborhood, city, state, complement);
 
         return res.status(201).json({ message: "Filial criada com sucesso.", newBranch });
     } catch (error) {

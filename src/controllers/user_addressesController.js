@@ -29,6 +29,10 @@ const getUserAddressById = async (req, res) => {
 // Rota para criar um novo endereço de usuário
 const createUserAddress = async (req, res) => {
     try {
+        if (!req.body) {
+            return res.status(400).json({ message: "O corpo da requisição está vazio." });
+        }
+
         const { user_id, cep, street, number, neighborhood, city, state, complement, reference_point, is_default } = req.body;
 
         // Valida os campos obrigatórios
