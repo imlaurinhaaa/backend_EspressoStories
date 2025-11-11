@@ -24,11 +24,11 @@ const updateOrderItem = async (id, order_id, featuredproduct_branches, product_i
         throw new Error("Item do carrinho não encontrado.");
     }
 
-    const updateOrderItem = order_id || currentOrderItem.rows[0].order_id;
-    const updateFeaturedProductBranches = featuredproduct_branches || currentOrderItem.rows[0].featuredproduct_branches;
-    const updateProductId = product_id || currentOrderItem.rows[0].product_id;
-    const updateQuantity = quantity || currentOrderItem.rows[0].quantity;
-    const updatePrice = price || currentOrderItem.rows[0].price;
+    const updateOrderItem = order_id ?? currentOrderItem.rows[0].order_id;
+    const updateFeaturedProductBranches = featuredproduct_branches ?? currentOrderItem.rows[0].featuredproduct_branches;
+    const updateProductId = product_id ?? currentOrderItem.rows[0].product_id;
+    const updateQuantity = quantity ?? currentOrderItem.rows[0].quantity;
+    const updatePrice = price ?? currentOrderItem.rows[0].price;
 
     const result = await pool.query(
         "UPDATE order_items SET order_id = $1, featuredproduct_branches = $2, product_id = $3, quantity = $4, price = $5 WHERE id = $6 RETURNING *",
