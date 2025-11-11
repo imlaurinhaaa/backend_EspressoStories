@@ -34,7 +34,7 @@ const createCartItem = async (req, res) => {
         return res.status(201).json({ message: "Item do carrinho criado com sucesso.", newCartItem});
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Erro ao criar item do carrinho."})
+        return res.status(500).json({ message: "Erro ao criar item do carrinho."});
     }
 };
 
