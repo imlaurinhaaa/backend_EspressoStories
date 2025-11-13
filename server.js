@@ -11,6 +11,7 @@ const productsRoutes = require("./src/routes/productsRoutes");
 const featureProductRoutes = require("./src/routes/featureProductRoutes");
 const order_itemsRoutes = require("./src/routes/order_itemsRoutes");
 const reviewRoutes = require("./src/routes/reviewsRoutes");
+const adminRoutes = require("./src/routes/adminRoutes");
 
 const app = express();  
 app.use(cors()); 
@@ -26,6 +27,7 @@ app.use("/api", productsRoutes);
 app.use("/api", featureProductRoutes);
 app.use("/api", order_itemsRoutes);
 app.use("/api", reviewRoutes);
+app.use("/api", adminRoutes);
 
 const PORT = process.env.PORT || 4000;  
 

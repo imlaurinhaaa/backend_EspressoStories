@@ -29,21 +29,69 @@ const getFeaturedProductById = async (req, res) => {
 // Rota para criar um novo produto
 const createFeaturedProduct = async (req, res) => {
     try {
-        const { branch_id, category_id, name, photo, description, price, inspiration, photo_inspiration } = req.body;
+        // Logs para depuração
+        console.log("Corpo da requisição recebido:", req.body);
+        console.log("Arquivos recebidos:", req.files);
 
-        // Valida os campos obrigatórios
-        if (!branch_id || !category_id || !name || !photo || !description || !price) {
-            return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });
+        // Se o body vier vazio (multer não preencheu)
+        if (!req.body || Object.keys(req.body).length === 0) {
+            return res.status(400).json({
+                message: "Nenhum dado recebido. Verifique se está enviando o formulário como 'form-data'."
+            });
         }
 
-        const newProduct = await featureProductModel.createFeaturedProduct(branch_id, category_id, name, photo, description, price, inspiration, photo_inspiration);
+        const { branch_id, category_id, name, description, price, inspiration } = req.body;
 
-        return res.status(201).json({ message: "Produto criado com sucesso.", newProduct });
+        if (!branch_id || !category_id || !name || !description || !price || !inspiration) {
+            return res.status(400).json({
+                message: "Todos os campos são obrigatórios."
+            });
+        }
+
+        // Validação de preço
+        if (isNaN(price) || Number(price) <= 0) {
+            return res.status(400).json({
+                message: "O campo 'price' deve conter um número válido maior que zero."
+            });
+        }
+
+        // Captura das imagens enviadas
+        const photo = req.files?.photo ? req.files.photo[0].filename : null;
+        const photo_inspiration = req.files?.photo_inspiration ? req.files.photo_inspiration[0].filename : null;
+
+        // Verifica se a foto obrigatória foi enviada
+        if (!photo) {
+            return res.status(400).json({
+                message: "O campo 'photo' é obrigatório. Envie uma imagem válida."
+            });
+        }
+
+        // Criação do produto
+        const newProduct = await featureProductModel.createFeaturedProduct(
+            branch_id,
+            category_id,
+            name,
+            photo,
+            description,
+            price,
+            inspiration,
+            photo_inspiration
+        );
+
+        console.log("✅ Produto criado com sucesso:", newProduct);
+        return res.status(201).json({
+            message: "Produto criado com sucesso.",
+            newProduct
+        });
+
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: `Erro ao criar produto: ${error.message}` });
+        console.error("❌ Erro ao criar produto:", error);
+        return res.status(500).json({
+            message: `Erro ao criar produto: ${error.message}`
+        });
     }
 };
+
 
 
 // Rota para atualizar os dados de um produto

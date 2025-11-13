@@ -57,12 +57,15 @@ const getFeaturedProductById = async (id) => {
 const createFeaturedProduct = async (branch_id, category_id, name, photo, description, price, inspiration, photo_inspiration) => {
     try {
         const result = await pool.query(
-            "INSERT INTO feature_products (branch_id, category_id, name, photo, description, price, inspiration, photo_inspiration) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+            `INSERT INTO feature_products 
+            (branch_id, category_id, name, photo, description, price, inspiration, photo_inspiration)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *`,
             [branch_id, category_id, name, photo, description, price, inspiration, photo_inspiration]
         );
+
         return result.rows[0];
     } catch (error) {
-        console.error(error);
         throw new Error(`Erro ao criar produto: ${error.message}`);
     }
 };
@@ -77,14 +80,14 @@ const updateFeaturedProduct = async (id, branch_id, category_id, name, photo, de
         }
 
         // Atualiza os campos com os valores fornecidos ou mantém os valores atuais
-        const updatedBranchId = (branch_id !== undefined) ? branch_id : currentProduct.rows[0].branch_id;
-        const updatedCategoryId = (category_id !== undefined) ? category_id : currentProduct.rows[0].category_id;
-        const updatedName = (name !== undefined) ? name : currentProduct.rows[0].name;
-        const updatedPhoto = (photo !== undefined) ? photo : currentProduct.rows[0].photo;
-        const updatedDescription = (description !== undefined) ? description : currentProduct.rows[0].description;
-        const updatedPrice = (price !== undefined) ? price : currentProduct.rows[0].price;
-        const updatedInspiration = (inspiration !== undefined) ? inspiration : currentProduct.rows[0].inspiration;
-        const updatedPhotoInspiration = (photo_inspiration !== undefined) ? photo_inspiration : currentProduct.rows[0].photo_inspiration;
+        const updatedBranchId = branch_id?.trim() ? branch_id : currentProduct.rows[0].branch_id;
+        const updatedCategoryId = category_id?.trim() ? category_id : currentProduct.rows[0].category_id;
+        const updatedName = name?.trim() ? name : currentProduct.rows[0].name;
+        const updatedPhoto = photo?.trim() ? photo : currentProduct.rows[0].photo;
+        const updatedDescription = description?.trim() ? description : currentProduct.rows[0].description;
+        const updatedPrice = price?.trim() ? price : currentProduct.rows[0].price;
+        const updatedInspiration = inspiration?.trim() ? inspiration : currentProduct.rows[0].inspiration;
+        const updatedPhotoInspiration = photo_inspiration?.trim() ? photo_inspiration : currentProduct.rows[0].photo_inspiration;
 
         // Executa a atualização no banco de dados
         const result = await pool.query(
