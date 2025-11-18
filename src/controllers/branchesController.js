@@ -29,14 +29,14 @@ const getBranchById = async (req, res) => {
 // Rota para criar uma nova filial
 const createBranch = async (req, res) => {
     try {
-        const { name, cep, street, number, neighborhood, city, state, complement } = req.body;
+        const { name, cep, street, number, neighborhood, city, state, complement, reference_point } = req.body;
 
         // Valida os campos obrigatórios
-        if (!name || !cep || !street || !number || !neighborhood || !city || !state || !complement) {
+        if (!name || !cep || !street || !number || !neighborhood || !city || !state || !complement || !reference_point) {
             return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });
         }
 
-        const newBranch = await branchesModels.createBranch(name, cep, street, number, neighborhood, city, state, complement);
+        const newBranch = await branchesModels.createBranch(name, cep, street, number, neighborhood, city, state, complement, reference_point);
 
         return res.status(201).json({ message: "Filial criada com sucesso.", newBranch });
     } catch (error) {
@@ -48,8 +48,8 @@ const createBranch = async (req, res) => {
 // Rota para atualizar os dados de uma filial
 const updateBranch = async (req, res) => {
     try {
-        const { name, cep, street, number, neighborhood, city } = req.body;
-        const updatedBranch = await branchesModels.updateBranch(req.params.id, name, cep, street, number, neighborhood, city);
+        const { name, cep, street, number, neighborhood, city, state, complement, reference_point } = req.body;
+        const updatedBranch = await branchesModels.updateBranch(req.params.id, name, cep, street, number, neighborhood, city, state, complement, reference_point);
 
         if (!updatedBranch) {
             return res.status(404).json({ message: "Filial não encontrada para atualização." });

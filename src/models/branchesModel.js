@@ -41,11 +41,11 @@ const getBranchById = async (id) => {
 };
 
 // Função para criar uma nova filial
-const createBranch = async (name, cep, street, number, neighborhood, city, state, complement) => {
+const createBranch = async (name, cep, street, number, neighborhood, city, state, complement, reference_point) => {
     try {
         const result = await pool.query(
-            "INSERT INTO branches (name, cep, street, number, neighborhood, city, state, complement) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
-            [name, cep, street, number, neighborhood, city, state, complement]
+            "INSERT INTO branches (name, cep, street, number, neighborhood, city, state, complement, reference_point) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+            [name, cep, street, number, neighborhood, city, state, complement, reference_point]
         );
         return result.rows[0];
     } catch (error) {
@@ -55,7 +55,7 @@ const createBranch = async (name, cep, street, number, neighborhood, city, state
 };
 
 // Função para atualizar os dados de uma filial
-const updateBranch = async (id, name, cep, street, number, neighborhood, city, state, complement) => {
+const updateBranch = async (id, name, cep, street, number, neighborhood, city, state, complement, reference_point) => {
     try {
         // Verifica se a filial existe
         const currentBranch = await pool.query("SELECT * FROM branches WHERE id = $1", [id]);
@@ -72,11 +72,12 @@ const updateBranch = async (id, name, cep, street, number, neighborhood, city, s
         const updatedCity = city?.trim() ? city : currentBranch.rows[0].city;
         const updatedState = state?.trim() ? state : currentBranch.rows[0].state;
         const updatedComplement = complement?.trim() ? complement : currentBranch.rows[0].complement;
+        const updatedReferencePoint = reference_point?.trim() ? reference_point : currentBranch.rows[0].reference_point;
 
         // Executa a atualização no banco de dados
         const result = await pool.query(
-            "UPDATE branches SET name = $1, cep = $2, street = $3, number = $4, neighborhood = $5, city = $6, state = $7, complement = $8 WHERE id = $9 RETURNING *",
-            [updatedName, updatedCep, updatedStreet, updatedNumber, updatedNeighborhood, updatedCity, updatedState, updatedComplement, id]
+            "UPDATE branches SET name = $1, cep = $2, street = $3, number = $4, neighborhood = $5, city = $6, state = $7, complement = $8, reference_point = $9 WHERE id = $10 RETURNING *",
+            [updatedName, updatedCep, updatedStreet, updatedNumber, updatedNeighborhood, updatedCity, updatedState, updatedComplement, updatedReferencePoint, id]
         );
         return result.rows[0];
     } catch (error) {

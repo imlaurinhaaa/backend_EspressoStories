@@ -39,16 +39,21 @@ const createProduct = async (req, res) => {
             });
         }
 
+        // Destructure body and allow 'inspiration' to be optional
         const { category_id, name, description, price, inspiration } = req.body;
 
-        if (!category_id || !name || !description || !price || !inspiration) {
+        if (!category_id || !name || !description || (price === undefined || price === null || String(price).trim() === "")) {
             return res.status(400).json({
-                message: "Os campos 'category_id', 'name', 'description', 'price' e 'inspiration' são obrigatórios."
+                message: "Os campos 'category_id', 'name', 'description' e 'price' são obrigatórios."
             });
         }
 
-        // Validação de preço
-        if (isNaN(price) || Number(price) <= 0) {
+        // Normalização do campo de preço
+        const normalizedPriceString = String(price).replace(/\s+/g, '').replace(',', '.').replace(/[^0-9.]/g, '');
+        const priceNumber = Number(normalizedPriceString);
+
+        // Validação de preço com o número normalizado
+        if (!normalizedPriceString || isNaN(priceNumber) || priceNumber <= 0) {
             return res.status(400).json({
                 message: "O campo 'price' deve conter um número válido maior que zero."
             });
@@ -71,7 +76,7 @@ const createProduct = async (req, res) => {
             name,
             photo,
             description,
-            price,
+            priceNumber,
             inspiration,
             photo_inspiration
         );

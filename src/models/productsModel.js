@@ -2,7 +2,8 @@ const pool = require("../config/database");
 
 // Função para buscar produtos pelo nome 
 const getProducts = async (name) => {
-    let query = "SELECT products.* FROM products";
+    // Seleciona os campos do produto e o nome da categoria (category_name)
+    let query = "SELECT products.*, categories.name AS category_name FROM products LEFT JOIN categories ON products.category_id = categories.id";
     let conditions = [];
     let params = [];
 
@@ -27,10 +28,13 @@ const getProducts = async (name) => {
     }
 };
 
-// Função para buscar um produto pelo ID
+// Função para buscar um produto pelo ID (inclui nome da categoria como `category_name`)
 const getProductById = async (id) => {
     try {
-        const result = await pool.query("SELECT * FROM products WHERE id = $1", [id]);
+        const result = await pool.query(
+            "SELECT products.*, categories.name AS category_name FROM products LEFT JOIN categories ON products.category_id = categories.id WHERE products.id = $1",
+            [id]
+        );
         if (result.rows.length === 0) {
             throw new Error("Produto não encontrado.");
         }

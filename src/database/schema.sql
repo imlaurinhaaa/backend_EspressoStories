@@ -1,5 +1,5 @@
-CREATE DATABASE expresso_stories;
-\c expresso_stories;
+CREATE DATABASE espresso_stories;
+\c espresso_stories;
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -79,7 +79,7 @@ CREATE TABLE cart_items (
     id SERIAL PRIMARY KEY,
     cart_id INTEGER REFERENCES carts(id) ON DELETE CASCADE,
     product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
-    featured_product_id INTEGER REFERENCES featuredproduct_branches(id) ON DELETE CASCADE,
+    featured_product_id INTEGER REFERENCES feature_products(id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL DEFAULT 1,
     price DECIMAL(10,2) NOT NULL,
     observations TEXT
@@ -88,7 +88,6 @@ CREATE TABLE cart_items (
 CREATE TYPE payment_method_enum AS ENUM ('pix', 'cartao', 'dinheiro');
 
 CREATE TYPE order_status_enum AS ENUM ('Pendente', 'Pago', 'Cancelado');
-
 
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
@@ -106,7 +105,7 @@ CREATE TABLE orders (
 CREATE TABLE order_items (
     id SERIAL PRIMARY KEY,
     order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
-    featuredproduct_branches INTEGER REFERENCES featuredproduct_branches(id) ON DELETE CASCADE,
+    featured_product_id INTEGER REFERENCES feature_products(id) ON DELETE CASCADE,
     product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL,
     price DECIMAL(10,2) NOT NULL
