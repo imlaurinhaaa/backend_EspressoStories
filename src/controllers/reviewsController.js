@@ -43,8 +43,8 @@ const createReview = async (req, res) => {
 
 const updateReview = async (req, res) => {
     try {
-        const { user_id, product_id, note, comments } = req.body;
-        const updateReview = await reviewsModel.updateReview(req.params.id, user_id, product_id, note, comments);
+        const { note, comments } = req.body;
+        const updateReview = await reviewsModel.updateReview(req.params.id, note, comments);
 
         if (!updateReview) {
             return res.status(404).json({ message: "Avaliação não encontrada para avaliação."});

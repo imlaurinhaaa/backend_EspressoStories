@@ -24,13 +24,13 @@ const getOrderItemsById = async (req, res) => {
 
 const createOrderItem = async (req, res) => {
     try {
-        const { order_id, featuredproduct_branches, product_id, quantity, price } = req.body;
+        const { order_id, featured_product_id, product_id, quantity, price } = req.body;
 
-        if (!order_id || !featuredproduct_branches || !product_id || !quantity || !price) {
+        if (!order_id || !featured_product_id || !product_id || !quantity || !price) {
             return res.status(400).json({ message: "Todos os campos são obrigatórios."});
         }
 
-        const newOrderItem = await orderItemsModel.createOrderItem(order_id, featuredproduct_branches, product_id, quantity, price);
+        const newOrderItem = await orderItemsModel.createOrderItem(order_id, featured_product_id, product_id, quantity, price);
         return res.status(201).json({ message: "Item da encomenda criado com sucesso.", newOrderItem});
     } catch (error) {
         console.error(error);
@@ -40,8 +40,8 @@ const createOrderItem = async (req, res) => {
 
 const updateOrderItem = async (req, res) => {
     try {
-        const { order_id, featuredproduct_branches, product_id, quantity, price } = req.body;
-        const updateOrderItem = await orderItemsModel.updateOrderItem(req.params.id, order_id, featuredproduct_branches, product_id, quantity, price);
+        const { order_id, featured_product_id, product_id, quantity, price } = req.body;
+        const updateOrderItem = await orderItemsModel.updateOrderItem(req.params.id, order_id, featured_product_id, product_id, quantity, price);
 
         if (!updateOrderItem) {
             return res.status(404).json({ message: "Item da encomenda não encontrado."});
