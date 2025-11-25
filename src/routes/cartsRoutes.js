@@ -9,5 +9,6 @@ router.get("/carts/:id", cartsController.getCartById);
 router.post("/carts", upload.none(), cartsController.createCart);
 router.put("/carts/:id", upload.none(), cartsController.updateCart);
 router.delete("/carts/:id", cartsController.deleteCart);
+router.get("/cart/:userId", cartsController.getCartWithItems);
 
 module.exports = router;

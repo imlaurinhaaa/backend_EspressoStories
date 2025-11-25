@@ -25,32 +25,42 @@ const getCartItemsById = async (req, res) => {
 
 const createCartItem = async (req, res) => {
     try {
-        const { cart_id, product_id, featured_product_id, quantity, price, observations } = req.body;
+        const { cart_id, product_id, featured_product_id = null, quantity = 1, observations = null } = req.body;
 
-        if (!cart_id || !product_id || !quantity || !price) {
-            return res.status(400).json({ message: "Os campos do carrinho, produto, quantidade e preço são obrigatórios."});
+        // Validação mínima
+        if (!cart_id || !product_id || !quantity) {
+            return res.status(400).json({ message: "Os campos cart_id, product_id e quantity são obrigatórios." });
         }
 
-        const newCartItem = await cartItemsModel.createCartItem(cart_id, product_id, featured_product_id, quantity, price, observations);
-        return res.status(201).json({ message: "Item do carrinho criado com sucesso.", newCartItem});
+        const newCartItem = await cartItemsModel.createCartItem(cart_id, product_id, featured_product_id, quantity, observations);
+        return res.status(201).json({ message: "Item do carrinho criado com sucesso.", newCartItem });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Erro ao criar item do carrinho."});
+        return res.status(500).json({ message: "Erro ao criar item do carrinho." });
     }
 };
 
 const updateCartItem = async (req, res) => {
     try {
-        const { cart_id, product_id, featured_product_id, quantity, price, observations } = req.body;
-        const updateCartItem = await cartItemsModel.updateCartItem(req.params.id, cart_id, product_id, featured_product_id, quantity, price, observations);
+        const { id } = req.params;
+        const { cart_id, product_id, featured_product_id, quantity, observations } = req.body;
 
-        if (!updateCartItem) {
-            return res.status(404).json({ message: "Item do carrinho não encontrado."});
+        const updatedCartItem = await cartItemsModel.updateCartItem(id, {
+            cart_id,
+            product_id,
+            featured_product_id,
+            quantity,
+            observations
+        });
+
+        if (!updatedCartItem) {
+            return res.status(404).json({ message: "Item do carrinho não encontrado." });
         }
-        res.status(200).json({ message: "Item do carrinho atualizado com sucesso.", updateCartItem});
+
+        res.status(200).json({ message: "Item do carrinho atualizado com sucesso.", updatedCartItem });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Erro ao atualizar item do carrinho."});
+        return res.status(500).json({ message: "Erro ao atualizar item do carrinho." });
     }
 };
 

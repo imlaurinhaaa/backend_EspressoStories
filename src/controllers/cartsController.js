@@ -61,4 +61,28 @@ const deleteCart = async (req, res) => {
     }
 };
 
-module.exports = { getCarts, getCartById, createCart, updateCart, deleteCart };
+const getCartWithItems = async (req, res) => {
+    try {
+    
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ message: "O parâmetro userId é obrigatório." });
+        }
+
+        const cartWithItems = await cartsModel.getCartWithItems(userId);
+        return res.status(200).json(cartWithItems);
+    } catch (error) {
+        console.error("Erro ao buscar carrinho:", error);
+        return res.status(500).json({ message: "Erro ao buscar carrinho.", error: error.message });
+    }
+};
+
+module.exports = { 
+    getCarts, 
+    getCartById, 
+    createCart, 
+    updateCart, 
+    deleteCart, 
+    getCartWithItems 
+};
