@@ -25,32 +25,33 @@ const getOrderItemsById = async (req, res) => {
 
 const createOrderItem = async (req, res) => {
     try {
-        const { order_id, featured_product_id, product_id, quantity, price } = req.body;
+        const { order_id, featured_product_id, product_id, quantity } = req.body;
 
-        if (!order_id || !featured_product_id || !product_id || !quantity || !price) {
-            return res.status(400).json({ message: "Todos os campos são obrigatórios."});
+        if (!order_id || (!featured_product_id && !product_id) || !quantity) {
+            return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });
         }
 
-        const newOrderItem = await orderItemsModel.createOrderItem(order_id, featured_product_id, product_id, quantity, price);
-        return res.status(201).json({ message: "Item da encomenda criado com sucesso.", newOrderItem});
+        const newOrderItem = await orderItemsModel.createOrderItem(order_id, featured_product_id, product_id, quantity);
+        return res.status(201).json({ message: "Item da encomenda criado com sucesso.", newOrderItem });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Erro ao criar item da encomenda."});
+        return res.status(500).json({ message: "Erro ao criar item da encomenda." });
     }
 };
 
 const updateOrderItem = async (req, res) => {
     try {
-        const { order_id, featured_product_id, product_id, quantity, price } = req.body;
-        const updateOrderItem = await orderItemsModel.updateOrderItem(req.params.id, order_id, featured_product_id, product_id, quantity, price);
+        const { order_id, featured_product_id, product_id, quantity } = req.body;
 
-        if (!updateOrderItem) {
-            return res.status(404).json({ message: "Item da encomenda não encontrado."});
+        const updatedOrderItem = await orderItemsModel.updateOrderItem(req.params.id, order_id, featured_product_id, product_id, quantity);
+
+        if (!updatedOrderItem) {
+            return res.status(404).json({ message: "Item da encomenda não encontrado." });
         }
-        res.status(200).json({ message: "Item da encomenda atualizado com sucesso.", updateOrderItem});
+        res.status(200).json({ message: "Item da encomenda atualizado com sucesso.", updatedOrderItem });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Erro ao atualizar item da encomenda."});
+        return res.status(500).json({ message: "Erro ao atualizar item da encomenda." });
     }
 };
 

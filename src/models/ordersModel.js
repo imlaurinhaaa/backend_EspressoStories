@@ -11,7 +11,7 @@ const getOrders = async (user_id) => {
             feature_products.photo AS featured_product_photo
         FROM orders
         JOIN users ON orders.user_id = users.id
-        JOIN order_items ON orders.id = order_items.order_id
+        LEFT JOIN order_items ON orders.id = order_items.order_id
         LEFT JOIN products ON order_items.product_id = products.id
         LEFT JOIN feature_products ON order_items.featured_product_id = feature_products.id
     `;
