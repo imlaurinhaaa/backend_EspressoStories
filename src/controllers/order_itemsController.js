@@ -16,6 +16,9 @@ const getOrderItemsById = async (req, res) => {
         if (!orderItem) {
             res.status(404).json({ message: "Item da encomenda não encontrado."});
         }
+        if(orderItem.length === 0) {
+            return res.status(404).json({ message: "Encomenda não possui itens."});
+        }
         res.status(200).json({ message: "Item da encomenda encontrado com sucesso.", orderItem});
     } catch (error) {
         console.error(error);
