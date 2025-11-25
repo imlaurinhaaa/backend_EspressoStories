@@ -2,16 +2,11 @@ const pool = require("../config/database");
 
 const getOrders = async (user_id) => {
     let query = "SELECT orders.* FROM orders";
-    let conditions = [];
     let params = [];
 
-    if (user_id && user_id.trim()) {
-        params.push(`%${user_id.trim()}%`);
-        conditions.push(`orders.user_id ILIKE $${params.length}`);
-    }
-
-    if (conditions.length > 0) {
-        query += " WHERE " + conditions.join(" AND ");
+    if (user_id) {
+        params.push(user_id);
+        query += " WHERE orders.user_id = $1";
     }
 
     try {

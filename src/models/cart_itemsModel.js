@@ -1,8 +1,20 @@
 const pool = require("../config/database");
 
-const getCartItems = async () => {
-    const result = await pool.query("SELECT * FROM cart_items");
-    return result.rows;
+const getCartItems = async (product_id) => {
+    let query = "SELECT cart_items.* FROM cart_items";
+    let params = [];
+
+    if (product_id) {
+        params.push(product_id);
+        query += " WHERE cart_items.product_id = $1";
+    }
+
+    try {
+        const result = await pool.query(query, params);
+        return result.rows;
+    } catch (error) {
+        throw new Error(`Erro ao buscar itens do carrinho: ${error.message}`);
+    }
 };
 
 const getCartItemsById = async (id) => {

@@ -2,7 +2,8 @@ const cartItemsModel = require("../models/cart_itemsModel");
 
 const getCartItems = async (req, res) => {
     try {
-        const cartItems = await cartItemsModel.getCartItems();
+        const { product_id } = req.query;
+        const cartItems = await cartItemsModel.getCartItems(product_id);
         res.json(cartItems);
     } catch (error) {
         res.status(404).json({ message: "Erro ao buscar itens do carrinho."});

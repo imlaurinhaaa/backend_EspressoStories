@@ -7,7 +7,6 @@ const productsController = require("../controllers/productsController");
 router.get("/products", productsController.getProducts);
 router.get("/products/:id", productsController.getProductById);
 
-// Atualizado para aceitar múltiplos campos de upload
 router.post(
     "/products",
     upload.fields([
