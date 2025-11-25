@@ -2,7 +2,8 @@ const orderItemsModel = require("../models/order_itemsModel");
 
 const getOrderItems = async (req, res) => {
     try {
-        const orderItems = await orderItemsModel.getOrderItems();
+        const { product_id } = req.query;
+        const orderItems = await orderItemsModel.getOrderItems(product_id);
         res.json(orderItems);
     } catch (error) {
         res.status(404).json({ message: "Erro ao buscar item da encomenda."});
