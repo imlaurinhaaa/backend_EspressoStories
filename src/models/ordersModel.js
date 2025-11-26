@@ -82,4 +82,42 @@ const deleteOrders = async (id) => {
     }
 };
 
-module.exports = { getOrders, getOrdersById, createOrders, updateOrders, deleteOrders };
+const getOrderWithItems = async (user_id) => {
+    const orderResult = await pool.query(
+        `SELECT c.*, u.name AS user_name 
+         FROM orders c
+         JOIN users u ON u.id = c.user_id
+         WHERE c.user_id = $1 
+         LIMIT 1`,
+        [user_id]
+    );
+
+    if (orderResult.rowCount === 0) {
+        return { order: null, items: [], total_price: 0 };
+    }
+
+    const order = orderResult.rows[0];
+
+    const itemsResult = await pool.query(
+        `SELECT ci.*, p.name AS product_name, p.price AS product_price 
+         FROM order_items ci
+         JOIN products p ON p.id = ci.product_id
+         WHERE ci.order_id = $1`,
+        [order.id]
+    );
+
+    const items = itemsResult.rows.map(item => ({
+        ...item,
+        total_item_price: item.product_price * item.quantity
+    }));
+
+    const totalPrice = items.reduce((sum, item) => sum + item.total_item_price, 0);
+
+    return {
+        order: { ...order, user_name: order.user_name },
+        items,
+        total_price: totalPrice
+    };
+};
+
+module.exports = { getOrders, getOrdersById, createOrders, updateOrders, deleteOrders, getOrderWithItems };

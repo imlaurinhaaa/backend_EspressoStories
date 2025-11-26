@@ -70,4 +70,21 @@ const deleteOrder = async (req, res) => {
     }
 };
 
-module.exports = { getOrders, getOrdersById, createOrders, updateOrder, deleteOrder };
+const getOrderWithItems = async (req, res) => {
+    try {
+    
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ message: "O parâmetro userId é obrigatório." });
+        }
+
+        const orderWithItems = await ordersModel.getOrderWithItems(userId);
+        return res.status(200).json(orderWithItems);
+    } catch (error) {
+        console.error("Erro ao buscar carrinho:", error);
+        return res.status(500).json({ message: "Erro ao buscar carrinho.", error: error.message });
+    }
+};
+
+module.exports = { getOrders, getOrdersById, createOrders, updateOrder, deleteOrder, getOrderWithItems };
