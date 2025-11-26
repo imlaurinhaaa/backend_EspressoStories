@@ -1,12 +1,12 @@
 const pool = require("../config/database");
 
 const getCartItems = async (product_id) => {
-    let query = "SELECT cart_items.* FROM cart_items";
-    let params = [];
+    let query = `SELECT ci.*, p.name AS product_name, p.photo AS product_photo FROM cart_items ci LEFT JOIN products p ON p.id = ci.product_id`;
+    const params = [];
 
     if (product_id) {
         params.push(product_id);
-        query += " WHERE cart_items.product_id = $1";
+        query += " WHERE ci.product_id = $1";
     }
 
     try {
@@ -18,7 +18,14 @@ const getCartItems = async (product_id) => {
 };
 
 const getCartItemsById = async (id) => {
-    const result = await pool.query("SELECT * FROM cart_items WHERE id = $1", [id]);
+    const result = await pool.query(
+        `SELECT ci.*, p.name AS product_name, p.photo AS product_photo, fp.name AS featured_product_name, fp.photo AS featured_product_photo
+         FROM cart_items ci
+         LEFT JOIN products p ON p.id = ci.product_id
+         LEFT JOIN feature_products fp ON fp.id = ci.featured_product_id
+         WHERE ci.id = $1`,
+        [id]
+    );
     return result.rows[0];
 };
 

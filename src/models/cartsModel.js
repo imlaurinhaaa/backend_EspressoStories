@@ -57,7 +57,7 @@ const getCartWithItems = async (user_id) => {
     const cart = cartResult.rows[0];
 
     const itemsResult = await pool.query(
-        `SELECT ci.*, p.name AS product_name, p.price AS product_price 
+        `SELECT ci.*, p.name AS product_name, p.price AS product_price, p.photo AS product_photo
          FROM cart_items ci
          JOIN products p ON p.id = ci.product_id
          WHERE ci.cart_id = $1`,
@@ -66,7 +66,8 @@ const getCartWithItems = async (user_id) => {
 
     const items = itemsResult.rows.map(item => ({
         ...item,
-        total_item_price: item.product_price * item.quantity
+        product_price: Number(item.product_price),
+        total_item_price: Number(item.product_price) * Number(item.quantity)
     }));
 
     const totalPrice = items.reduce((sum, item) => sum + item.total_item_price, 0);
