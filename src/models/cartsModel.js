@@ -79,11 +79,35 @@ const getCartWithItems = async (user_id) => {
     };
 };
 
+const clearCart = async (cart_id) => {
+    await pool.query(`DELETE FROM cart_items WHERE cart_id = $1`, [cart_id]);
+    return true;
+};
+
+const increaseQty = async (item_id) => {
+    await pool.query(
+        `UPDATE cart_items SET quantity = quantity + 1 WHERE id = $1`,
+        [item_id]
+    );
+};
+
+const decreaseQty = async (item_id) => {
+    await pool.query(
+        `UPDATE cart_items 
+         SET quantity = quantity - 1 
+         WHERE id = $1 AND quantity > 1`,
+        [item_id]
+    );
+};
+
 module.exports = { 
     getCarts, 
     getCartById, 
     createCart, 
     updateCart, 
     deleteCart, 
-    getCartWithItems 
+    getCartWithItems,
+    clearCart,
+    increaseQty,
+    decreaseQty
 };

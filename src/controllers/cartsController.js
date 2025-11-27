@@ -78,11 +78,52 @@ const getCartWithItems = async (req, res) => {
     }
 };
 
+const clearCart = async (req, res) => {
+    const { cart_id } = req.params;
+
+    try {
+        await cartsModel.clearCart(cart_id);
+
+        return res.status(200).json({
+            message: "Todos os itens foram removidos do carrinho."
+        });
+    } catch (error) {
+        console.error("Erro ao limpar carrinho:", error);
+        return res.status(500).json({ error: "Erro ao excluir itens do carrinho." });
+    }
+};
+
+const increaseQty = async (req, res) => {
+    try {
+        const { item_id } = req.body; 
+        await cartsModel.increaseQty(item_id);
+        return res.json({ message: "Quantidade aumentada" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+    }
+};
+
+const decreaseQty = async (req, res) => {
+    try {
+        const { item_id } = req.body; 
+        await cartsModel.decreaseQty(item_id);
+        return res.json({ message: "Quantidade diminuída" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+    }
+};
+
+
 module.exports = { 
     getCarts, 
     getCartById, 
     createCart, 
     updateCart, 
     deleteCart, 
-    getCartWithItems 
+    getCartWithItems,
+    clearCart,
+    increaseQty,
+    decreaseQty
 };

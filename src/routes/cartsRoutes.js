@@ -1,7 +1,7 @@
-const express = require("express");
-const router = express.Router();
 const multer = require("multer");
 const upload = multer();
+const express = require("express");
+const router = express.Router();
 const cartsController = require("../controllers/cartsController");
 
 router.get("/carts", cartsController.getCarts);
@@ -10,5 +10,8 @@ router.post("/carts", upload.none(), cartsController.createCart);
 router.put("/carts/:id", upload.none(), cartsController.updateCart);
 router.delete("/carts/:id", cartsController.deleteCart);
 router.get("/cart/:userId", cartsController.getCartWithItems);
+router.delete("/cart/clear/:cart_id", cartsController.clearCart);
+router.put("/cart/increase", cartsController.increaseQty);
+router.put("/cart/decrease", cartsController.decreaseQty);
 
 module.exports = router;
