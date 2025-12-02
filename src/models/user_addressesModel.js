@@ -24,6 +24,20 @@ const getUsersAddresses = async (city) => {
     }
 };
 
+const getUserAddressesByUserId = async (user_id) => {
+    try {
+        const result = await pool.query(
+            `SELECT * 
+             FROM user_addresses 
+             WHERE user_id = $1`,
+            [user_id]
+        );
+        return result.rows;
+    } catch (error) {
+        throw new Error(`Erro ao buscar endereços do usuário: ${error.message}`);
+    }
+};
+
 // Função para buscar um endereço de usuário pelo ID
 const getUserAddressById = async (id) => {
     try {
@@ -136,4 +150,5 @@ module.exports = {
     createUserAddress,
     updateUserAddress,
     deleteUserAddress,
+    getUserAddressesByUserId
 };

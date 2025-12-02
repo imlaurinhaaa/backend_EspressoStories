@@ -72,7 +72,6 @@ const deleteOrder = async (req, res) => {
 
 const getOrderWithItems = async (req, res) => {
     try {
-    
         const { userId } = req.params;
 
         if (!userId) {
@@ -80,10 +79,15 @@ const getOrderWithItems = async (req, res) => {
         }
 
         const orderWithItems = await ordersModel.getOrderWithItems(userId);
+
+        if (!orderWithItems.order) {
+            return res.status(404).json({ message: "Pedido não encontrado." });
+        }
+
         return res.status(200).json(orderWithItems);
     } catch (error) {
-        console.error("Erro ao buscar carrinho:", error);
-        return res.status(500).json({ message: "Erro ao buscar carrinho.", error: error.message });
+        console.error("Erro ao buscar pedido com itens:", error);
+        return res.status(500).json({ message: "Erro ao buscar pedido com itens.", error: error.message });
     }
 };
 
