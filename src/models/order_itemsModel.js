@@ -18,8 +18,25 @@ const getOrderItems = async (product_id) => {
 };
 
 const getOrderItemsById = async (id) => {
-    const result = await pool.query("SELECT * FROM order_items WHERE id = $1", [id]);
-    return result.rows[0];
+    console.log("Fetching order item with ID:", id);
+    try {
+        const result = await pool.query(
+            `SELECT 
+                oi.id,
+                oi.quantity,
+                oi.price,
+                p.name
+                FROM order_items oi
+                LEFT JOIN products p ON p.id = oi.product_id
+                LEFT JOIN feature_products fp ON fp.id = oi.featured_product_id
+                WHERE oi.order_id = $1`,
+            [id]
+        );
+        return result.rows;
+    } catch (error) {
+        console.error(error);
+        throw new Error("Erro ao buscar item da encomenda por ID.");
+    }
 };
 
 const calculatePrice = (unitPrice, quantity) => {
