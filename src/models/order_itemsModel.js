@@ -1,7 +1,29 @@
 const pool = require("../config/database");
 
 const getOrderItems = async (product_id) => {
-    let query = "SELECT order_items.* FROM order_items";
+    let query = 
+    `SELECT oi.*,
+    o.id AS order_id,
+    o.user_id AS order_user_id,
+    o.branch_id AS order_branch_id,
+    o.user_address_id AS order_user_address_id,
+    o.request_date AS order_request_date,
+    o.payment_method AS order_payment_method,
+    o.payment_status AS order_payment_status,
+    o.status AS order_status,
+    o.total_value AS order_total_value,
+    o.observations AS order_observations,
+    u.name AS order_user_name,
+    p.name AS order_product_name,
+    p.photo AS order_product_photo,
+    fp.name AS featured_product_name,
+    fp.photo AS featured_product_photo
+    FROM order_items oi
+    LEFT JOIN products p ON p.id = oi.product_id
+    LEFT JOIN feature_products fp ON fp.id = oi.featured_product_id
+    LEFT JOIN orders o ON o.id = oi.order_id
+    LEFT JOIN users u ON u.id = o.user_id
+    `;
     const params = [];
 
     if (product_id) {
