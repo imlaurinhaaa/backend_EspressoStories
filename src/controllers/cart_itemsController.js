@@ -25,11 +25,12 @@ const getCartItemsById = async (req, res) => {
 
 const createCartItem = async (req, res) => {
     try {
-        const { cart_id, product_id, featured_product_id = null, quantity = 1, observations = null } = req.body;
+        const { cart_id, product_id, featured_product_id, quantity = 1, observations = null } = req.body;
 
-        // Validação mínima
-        if (!cart_id || !product_id || !quantity) {
-            return res.status(400).json({ message: "Os campos cart_id, product_id e quantity são obrigatórios." });
+        if (!cart_id || (!product_id && !featured_product_id) || !quantity) {
+            return res.status(400).json({ 
+                message: "Os campos cart_id e pelo menos um entre product_id ou featured_product_id são obrigatórios." 
+            });
         }
 
         const newCartItem = await cartItemsModel.createCartItem(cart_id, product_id, featured_product_id, quantity, observations);

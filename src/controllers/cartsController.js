@@ -63,7 +63,6 @@ const deleteCart = async (req, res) => {
 
 const getCartWithItems = async (req, res) => {
     try {
-    
         const { userId } = req.params;
 
         if (!userId) {
@@ -71,6 +70,11 @@ const getCartWithItems = async (req, res) => {
         }
 
         const cartWithItems = await cartsModel.getCartWithItems(userId);
+
+        if (!cartWithItems.cart) {
+            return res.status(404).json({ message: "Carrinho não encontrado." });
+        }
+
         return res.status(200).json(cartWithItems);
     } catch (error) {
         console.error("Erro ao buscar carrinho:", error);
@@ -114,7 +118,6 @@ const decreaseQty = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
-
 
 module.exports = { 
     getCarts, 

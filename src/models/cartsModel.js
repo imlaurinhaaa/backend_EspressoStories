@@ -41,6 +41,8 @@ const deleteCart = async (id) => {
 };
 
 const getCartWithItems = async (user_id) => {
+    console.log("Buscando carrinho para user_id:", user_id);
+
     const cartResult = await pool.query(
         `SELECT c.*, u.name AS user_name 
          FROM carts c
@@ -57,17 +59,28 @@ const getCartWithItems = async (user_id) => {
     const cart = cartResult.rows[0];
 
     const itemsResult = await pool.query(
-        `SELECT ci.*, p.name AS product_name, p.price AS product_price, p.photo AS product_photo
+        `SELECT 
+            ci.*, 
+            p.name AS product_name, 
+            p.price AS product_price, 
+            p.photo AS product_photo,
+            fp.name AS featured_product_name, 
+            fp.price AS featured_product_price, 
+            fp.photo AS featured_product_photo
          FROM cart_items ci
-         JOIN products p ON p.id = ci.product_id
+         LEFT JOIN products p ON p.id = ci.product_id
+         LEFT JOIN feature_products fp ON fp.id = ci.featured_product_id
          WHERE ci.cart_id = $1`,
         [cart.id]
     );
 
     const items = itemsResult.rows.map(item => ({
         ...item,
-        product_price: Number(item.product_price),
-        total_item_price: Number(item.product_price) * Number(item.quantity)
+        product_price: item.product_price ? Number(item.product_price) : null,
+        featured_product_price: item.featured_product_price ? Number(item.featured_product_price) : null,
+        total_item_price: item.product_price
+            ? Number(item.product_price) * Number(item.quantity)
+            : Number(item.featured_product_price) * Number(item.quantity)
     }));
 
     const totalPrice = items.reduce((sum, item) => sum + item.total_item_price, 0);
