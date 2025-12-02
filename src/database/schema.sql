@@ -127,3 +127,73 @@ CREATE TABLE admin (
     password_hash VARCHAR(255) NOT NULL,
     photo VARCHAR(255)
 );
+
+
+INSERT INTO users (name, email, phone, password_hash)
+VALUES 
+('Rodrigo Silva', 'rodrigo.silva@example.com', '11987654321', '12345abc');
+
+INSERT INTO user_addresses (
+    user_id, cep, street, number, neighborhood, city, state,
+    complement, reference_point, is_default)
+    VALUES(
+    1,
+    '01310-000',
+    'Avenida Paulista',
+    '1000',
+    'Bela Vista',
+    'São Paulo',
+    'SP',
+    'Apto 45B',
+    'Próximo ao metrô Trianon-Masp',
+    TRUE
+);
+
+
+INSERT INTO carts (user_id, branch_id)
+VALUES (1, 2);
+
+INSERT INTO cart_items (
+    cart_id,
+    product_id,
+    quantity,
+    price,
+    observations
+)
+VALUES (
+    1,
+    4,
+    2,
+    20.00,
+    'Com Ketchup, por favor'
+);
+
+INSERT INTO orders (
+    user_id,
+    branch_id,
+    user_address_id,
+    payment_method,
+    total_value,
+    observations
+)
+VALUES (
+    1,
+    2,
+    1,
+    'pix',
+    20.00,
+    'Entregar no portão da frente'
+);
+
+INSERT INTO order_items (
+    order_id,
+    product_id,
+    quantity,
+    price
+)
+VALUES (
+    1,
+    4,
+    2,
+    20.00
+);
