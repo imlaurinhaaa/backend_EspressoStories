@@ -19,6 +19,10 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+const loginRoutes = require("./src/routes/loginRoutes");
+app.use("/api", loginRoutes);
+
+
 app.use("/api", cartsRoutes);
 app.use("/api", userRoutes);
 app.use("/api", user_addressesRoutes);
