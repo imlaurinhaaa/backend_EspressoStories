@@ -41,7 +41,7 @@ const createUser = async (req, res) => {
             return res.status(400).json({ message: "O campo 'phone' deve conter apenas números." });
         }
 
-        const photo = req.file ? req.file.filename : null; // Obtém o nome do arquivo da foto, se fornecido
+        const photo = req.file ? req.file.filename : null;
         const newUser = await userModel.createUser(name, email, phone, password_hash, photo);
 
         return res.status(201).json({ message: "Usuário criado com sucesso.", newUser });
