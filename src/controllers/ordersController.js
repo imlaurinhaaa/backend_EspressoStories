@@ -20,7 +20,7 @@ const getOrdersById = async (req, res) => {
         res.status(200).json({ message: "Encomenda encontrada com sucesso.", order });
     } catch (error) {
         console.error(error);
-        res.status(404).json({ message: `Erro ao encontrar encomenda: ${error.message}` });
+        res.status(500).json({ message: `Erro ao encontrar encomenda: ${error.message}` });
     }
 };
 
@@ -91,25 +91,71 @@ const getOrderWithItems = async (req, res) => {
     }
 };
 
-const getOrderDetails = async (req, res) => {
+const finalizeOrder = async (req, res) => {
+    // 🚨 Pegue os itens do carrinho e os totais do frontend, além dos dados do pedido
+    const { 
+        user_id, 
+        branch_id, 
+        user_address_id, 
+        payment_method, 
+        items // <--- Novo: Lista de itens do carrinho
+    } = req.body;
+
+    const frete = 15.00; // Valor fixo do frete (melhor se viesse de config ou BD)
+    
+    if (!user_id || !branch_id || !user_address_id || !payment_method || !items || items.length === 0) {
+        return res.status(400).json({ message: "Dados do pedido incompletos." });
+    }
+
+    const client = await pool.connect(); // Obtém uma conexão para a transação
+    
     try {
-        const { id: orderId } = req.params;
+        // 1. INÍCIO DA TRANSAÇÃO
+        await client.query('BEGIN');
+        
+        // 2. CRIA O PEDIDO BÁSICO (sem total_value ainda)
+        const orderCreationResult = await client.query(
+            "INSERT INTO orders (user_id, branch_id, user_address_id, payment_method) VALUES ($1, $2, $3, $4) RETURNING id",
+            [user_id, branch_id, user_address_id, payment_method]
+        );
+        
+        const orderId = orderCreationResult.rows[0].id; // 🚨 CAPTURA DO ID AUTOMÁTICO
+        
+        // 3. INSERE OS ITENS E CALCULA O SUBTOTAL
+        const subtotal = await ordersModel.insertOrderItems(client, orderId, items);
+        
+        // 4. CALCULA O TOTAL FINAL
+        const finalTotalValue = subtotal + frete;
+        
+        // 5. ATUALIZA O PEDIDO COM OS VALORES FINAIS
+        await client.query(
+            // Salvando o subtotal para facilitar a exibição na tela de resumo
+            `UPDATE orders SET total_value = $1, subtotal = $2, frete = $3 WHERE id = $4`,
+            [finalTotalValue, subtotal, frete, orderId]
+        );
+        
+        // 6. LIMPA O CARRINHO (Esta lógica deve estar aqui para garantir atomicidade)
+        // Você precisará de uma função no seu CartModel para limpar o carrinho do usuário.
+        // Exemplo: 
+        // const cartClearResult = await client.query("DELETE FROM cart_items WHERE user_id = $1", [user_id]);
+        
+        // 7. FIM DA TRANSAÇÃO (Sucesso)
+        await client.query('COMMIT');
+        
+        // 8. RETORNA O ID AUTOMÁTICO PARA O FRONTEND REDIRECIONAR
+        return res.status(201).json({ 
+            message: "Pedido finalizado com sucesso.", 
+            order_id: orderId // <--- É este ID que você precisa para o redirecionamento!
+        }); 
 
-        if (!orderId) {
-            return res.status(400).json({ message: "O parâmetro orderId é obrigatório." });
-        }
-
-        const details = await ordersModel.getOrderDetailsById(orderId);
-
-        return res.status(200).json({ message: "Detalhes do pedido obtidos com sucesso.", details });
     } catch (error) {
-        console.error("Erro ao buscar detalhes do pedido:", error.message);
-
-        if (error.message.includes("Pedido não encontrado")) {
-            return res.status(404).json({ message: error.message });
-        }
-        return res.status(500).json({ message: "Erro ao buscar detalhes do pedido.", error: error.message });
+        // ROLLBACK em caso de qualquer erro
+        await client.query('ROLLBACK');
+        console.error("Erro na finalização do pedido:", error);
+        return res.status(500).json({ message: `Erro ao finalizar encomenda: ${error.message}` });
+    } finally {
+        // Libera a conexão
+        client.release();
     }
 };
-
-module.exports = { getOrders, getOrdersById, createOrders, updateOrder, deleteOrder, getOrderWithItems, getOrderDetails };
+module.exports = { getOrders, getOrdersById, createOrders, updateOrder, deleteOrder, getOrderWithItems, finalizeOrder };

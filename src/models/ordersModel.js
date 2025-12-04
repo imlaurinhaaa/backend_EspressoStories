@@ -3,17 +3,24 @@ const pool = require("../config/database");
 const getOrders = async (user_id) => {
     let query = `
         SELECT 
-            orders.*, 
-            users.name AS user_name, 
-            products.name AS product_name, 
-            products.photo AS product_photo, 
-            feature_products.name AS featured_product_name, 
-            feature_products.photo AS featured_product_photo
-        FROM orders
-        JOIN users ON orders.user_id = users.id
-        LEFT JOIN order_items ON orders.id = order_items.order_id
-        LEFT JOIN products ON order_items.product_id = products.id
-        LEFT JOIN feature_products ON order_items.featured_product_id = feature_products.id
+            o.*,
+            u.name AS user_name,
+            JSON_AGG(
+                JSON_BUILD_OBJECT(
+                    'item_id', oi.id,
+                    'quantity', oi.quantity,
+                    'price', oi.price,
+                    'product_name', p.name,
+                    'product_photo', p.photo,
+                    'featured_product_name', fp.name,
+                    'featured_product_photo', fp.photo
+                )
+            ) AS items
+        FROM orders o
+        JOIN users u ON o.user_id = u.id
+        LEFT JOIN order_items oi ON o.id = oi.order_id
+        LEFT JOIN products p ON oi.product_id = p.id
+        LEFT JOIN feature_products fp ON oi.featured_product_id = fp.id
     `;
     let params = [];
 
@@ -21,6 +28,8 @@ const getOrders = async (user_id) => {
         params.push(user_id);
         query += " WHERE orders.user_id = $1";
     }
+
+    query += " GROUP BY o.id, u.name";
 
     try {
         const result = await pool.query(query, params);
@@ -31,16 +40,45 @@ const getOrders = async (user_id) => {
 };
 
 const getOrdersById = async (id) => {
+    console.log("Fetching order with ID:", id);
+    const query = `
+        SELECT 
+            o.*,
+            u.name AS user_name,
+            JSON_AGG(
+                JSON_BUILD_OBJECT(
+                    'item_id', oi.id,
+                    'quantity', oi.quantity,
+                    'price', oi.price,
+                    'product_name', COALESCE(p.name, fp.name),
+                    'product_photo', COALESCE(p.photo, fp.photo)
+                )
+            ) AS items,
+            CAST(SUM(oi.price) AS INTEGER) AS subtotal_value,
+            CAST(SUM(oi.price) + 15 AS INTEGER) AS total_value
+        FROM orders o
+        JOIN users u ON o.user_id = u.id
+        LEFT JOIN order_items oi ON o.id = oi.order_id
+        LEFT JOIN products p ON oi.product_id = p.id
+        LEFT JOIN feature_products fp ON oi.featured_product_id = fp.id
+        WHERE o.id = $1
+        GROUP BY o.id, u.name
+    `;
+
     try {
-        const result = await pool.query("SELECT * FROM orders WHERE id = $1", [id]);
-        if (result.rows.length === 0) {
-            throw new Error("Encomenda não encontrada.")
+        const result = await pool.query(query, [id]);
+
+        if (result.rowCount === 0) {
+            throw new Error("Encomenda não encontrada.");
         }
         return result.rows[0];
     } catch (error) {
-        throw new Error(`Erro ao buscar encomenda pelo ID: ${error.message}`);
+        throw new Error(`Erro ao buscar encomenda por ID: ${error.message}`);
     }
 };
+
+
+
 
 const createOrders = async (user_id, branch_id, user_address_id, payment_method) => {
     try {
@@ -195,6 +233,44 @@ const getOrderDetailsById = async (orderId) => {
     } catch (error) {
         throw new Error(`Erro ao buscar detalhes da encomenda: ${error.message}`);
     }
-}
+};
 
-module.exports = { getOrders, getOrdersById, createOrders, updateOrders, deleteOrders, getOrderWithItems, getOrderDetailsById };
+const insertOrderItems = async (client, orderId, items) => {
+    let subtotal = 0;
+    
+    // Query base para inserção
+    const insertQuery = `
+        INSERT INTO order_items (order_id, product_id, featured_product_id, quantity, price) 
+        VALUES ($1, $2, $3, $4, $5)
+    `;
+
+    for (const item of items) {
+        // 🚨 CORREÇÃO DO ERRO DO ITEM (Featured/Normal):
+        // Garantimos que o ID do produto ou o ID do featured product é passado.
+        const productId = item.product_id || null; 
+        const featuredProductId = item.featured_product_id || null; 
+        
+        // O preço total do item (preço unitário * quantidade) deve vir do Frontend, 
+        // ou ser calculado aqui, se o Frontend enviar o preço unitário.
+        // Vamos assumir que o Frontend envia item.total_item_price (Preço total do item)
+        const itemPrice = item.total_item_price; 
+
+        if (!itemPrice) {
+            throw new Error(`Preço total do item ausente para o produto: ${productId || featuredProductId}`);
+        }
+
+        await client.query(insertQuery, [
+            orderId, 
+            productId, 
+            featuredProductId, 
+            item.quantity, 
+            itemPrice
+        ]);
+        
+        subtotal += parseFloat(itemPrice);
+    }
+    
+    return subtotal;
+};
+
+module.exports = { getOrders, getOrdersById, createOrders, updateOrders, deleteOrders, getOrderWithItems, getOrderDetailsById, insertOrderItems };
