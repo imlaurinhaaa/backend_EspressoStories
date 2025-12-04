@@ -121,4 +121,71 @@ const getOrderWithItems = async (user_id) => {
     };
 };
 
-module.exports = { getOrders, getOrdersById, createOrders, updateOrders, deleteOrders, getOrderWithItems };
+const getOrderDetailsById = async (orderId) => {
+    try {
+        const orderResult = await pool.query(
+            `SELECT 
+                o.*,
+                ua.street, ua.number, ua.city, ua.state, ua.cep,
+                u.name AS user_name
+                FROM orders o
+                JOIN users u ON u.id = o.user_id
+                JOIN user_addresses ua ON ua.id = o.user_address_id
+                WHERE o.id = $1`,
+            [orderId]
+        );
+
+        if (orderResult.rowCount === 0) {
+            throw new Error("Encomenda não encontrada.");
+        }
+        const order = orderResult.rows[0];
+
+        const itemsResult = await pool.query(
+            `SELECT
+                oi.*,
+                COALESCE(p.name, fp.name) AS name,
+                COALESCE(p.photo, fp.photo) AS photo,
+                oi.price AS total_item_price,
+                oi.quantity
+                FROM order_items oi
+                LEFT JOIN products p ON p.id = oi.product_id
+                LEFT JOIN feature_products fp ON fp.id = oi.featured_product_id
+                WHERE oi.order_id = $1`,
+            [orderId]
+        );
+
+        const frete = 15.00;
+        let finalTotalValue = order.total_value;
+
+        if (!finalTotalValue) {
+            const subtotal = itemsResult.rows.reduce((sum, item) => sum + parseFloat(item.total_item_price), 0);
+            finalTotalValue = subtotal + frete;
+            await pool.query(
+                `UPDATE orders SET total_value = $1 WHERE id = $2`,
+                [finalTotalValue, orderId]
+            );
+        }
+
+        return {
+            order: {
+                ...order,
+                total_value: finalTotalValue,
+                subtotal: finalTotalValue - frete,
+                frete: frete
+            },
+            items: itemsResult.rows,
+            address: {
+                street: order.street,
+                number: order.number,
+                neighborhood: order.neighborhood,
+                city: order.city,
+                state: order.state,
+                cep: order.cep
+            }
+        };
+    } catch (error) {
+        throw new Error(`Erro ao buscar detalhes da encomenda: ${error.message}`);
+    }
+}
+
+module.exports = { getOrders, getOrdersById, createOrders, updateOrders, deleteOrders, getOrderWithItems, getOrderDetailsById };
