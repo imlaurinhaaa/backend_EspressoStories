@@ -100,12 +100,21 @@ const getOrderWithItems = async (user_id) => {
     const order = orderResult.rows[0];
 
     const itemsResult = await pool.query(
-        `SELECT ci.*, p.name AS product_name, p.price AS product_price 
+        `SELECT 
+            ci.*, 
+            p.name AS product_name, 
+            p.price AS product_price, 
+            p.photo AS product_photo,
+            fp.name AS featured_product_name, 
+            fp.price AS featured_product_price, 
+            fp.photo AS featured_product_photo
          FROM order_items ci
-         JOIN products p ON p.id = ci.product_id
+         LEFT JOIN products p ON p.id = ci.product_id
+         LEFT JOIN feature_products fp ON fp.id = ci.featured_product_id
          WHERE ci.order_id = $1`,
         [order.id]
     );
+
 
     const items = itemsResult.rows.map(item => ({
         ...item,
