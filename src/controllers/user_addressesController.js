@@ -14,13 +14,14 @@ const getUsersAddresses = async (req, res) => {
 
 const getUserAddresses = async (req, res) => {
     try {
-        const { user_id } = req.query;
+        const { user_id } = req.params;
 
         if (!user_id) {
             return res.status(400).json({ message: "O parâmetro user_id é obrigatório." });
         }
 
-        const addresses = await userAddressesModel.getUserAddressesByUserId(user_id);
+        const addresses = await user_addressesModel.getUserAddressesByUserId(user_id);
+
 
         if (addresses.length === 0) {
             return res.status(404).json({ message: "Nenhum endereço encontrado para este usuário." });
@@ -32,6 +33,7 @@ const getUserAddresses = async (req, res) => {
         return res.status(500).json({ message: "Erro ao buscar endereços do usuário.", error: error.message });
     }
 };
+
 
 // Rota para buscar um endereço de usuário pelo ID
 const getUserAddressById = async (req, res) => {
