@@ -47,7 +47,8 @@ const getOrderItemsById = async (id) => {
                 oi.id,
                 oi.quantity,
                 oi.price,
-                p.name
+                COALESCE(p.name, fp.name) AS name,
+                COALESCE(p.photo, fp.photo) AS photo
                 FROM order_items oi
                 LEFT JOIN products p ON p.id = oi.product_id
                 LEFT JOIN feature_products fp ON fp.id = oi.featured_product_id
@@ -70,33 +71,35 @@ const calculatePrice = (unitPrice, quantity) => {
     return (Math.round((up * q) * 100) / 100).toFixed(2);
 };
 
-const createOrderItem = async (order_id, featured_product_id = null, product_id = null, quantity = 1) => {
-    if (!order_id || (!featured_product_id && !product_id) || !quantity) {
-        throw new Error("Os campos order_id, product_id/featured_product_id e quantity são obrigatórios.");
-    }
-
-    let unitPrice;
-    if (product_id) {
-        const prodRes = await pool.query("SELECT price FROM products WHERE id = $1", [product_id]);
-        if (prodRes.rowCount === 0) {
-            throw new Error("Produto não encontrado.");
+const createOrderItem = async (order_id, featured_product_id, product_id, quantity) => {
+    try {
+        let unitPrice = 0;
+        if (product_id) {
+            const productResult = await pool.query("SELECT price FROM products WHERE id = $1", [product_id]);
+            if (productResult.rowCount === 0) throw new Error("Produto não encontrado.");
+            unitPrice = productResult.rows[0].price;
+        } else if (featured_product_id) {
+            const featuredResult = await pool.query("SELECT price FROM feature_products WHERE id = $1", [featured_product_id]);
+            if (featuredResult.rowCount === 0) throw new Error("Produto em destaque não encontrado.");
+            unitPrice = featuredResult.rows[0].price;
+        } else {
+            throw new Error("Nenhum produto especificado para o item da encomenda.");
         }
-        unitPrice = prodRes.rows[0].price;
-    } else {
-        const featRes = await pool.query("SELECT price FROM feature_products WHERE id = $1", [featured_product_id]);
-        if (featRes.rowCount === 0) {
-            throw new Error("Produto em destaque não encontrado.");
-        }
-        unitPrice = featRes.rows[0].price;
+
+        const totalItemPrice = (Number(unitPrice) * Number(quantity));
+
+        const query = `
+            INSERT INTO order_items (order_id, featured_product_id, product_id, quantity, price)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *`;
+        const values = [order_id, product_id || null, featured_product_id || null, quantity, totalItemPrice];
+
+        const result = await pool.query(query, values);
+        return result.rows[0];
+    } catch (error) {
+        console.error("Erro ao criar item da encomenda:", error);
+        throw new Error(`Erro ao criar item da encomenda: ${error.message}`);
     }
-
-    const price = calculatePrice(unitPrice, quantity);
-
-    const result = await pool.query(
-        `INSERT INTO order_items (order_id, featured_product_id, product_id, quantity, price) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-        [order_id, featured_product_id, product_id, quantity, price]
-    );
-    return result.rows[0];
 };
 
 const updateOrderItem = async (id, order_id = null, featured_product_id = null, product_id = null, quantity = null) => {

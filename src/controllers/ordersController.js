@@ -91,4 +91,25 @@ const getOrderWithItems = async (req, res) => {
     }
 };
 
-module.exports = { getOrders, getOrdersById, createOrders, updateOrder, deleteOrder, getOrderWithItems };
+const getOrderDetails = async (req, res) => {
+    try {
+        const { id: orderId } = req.params;
+
+        if (!orderId) {
+            return res.status(400).json({ message: "O parâmetro orderId é obrigatório." });
+        }
+
+        const details = await ordersModel.getOrderDetailsById(orderId);
+
+        return res.status(200).json({ message: "Detalhes do pedido obtidos com sucesso.", details });
+    } catch (error) {
+        console.error("Erro ao buscar detalhes do pedido:", error.message);
+
+        if (error.message.includes("Pedido não encontrado")) {
+            return res.status(404).json({ message: error.message });
+        }
+        return res.status(500).json({ message: "Erro ao buscar detalhes do pedido.", error: error.message });
+    }
+};
+
+module.exports = { getOrders, getOrdersById, createOrders, updateOrder, deleteOrder, getOrderWithItems, getOrderDetails };

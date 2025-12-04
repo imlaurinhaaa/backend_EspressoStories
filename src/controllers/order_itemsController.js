@@ -30,8 +30,12 @@ const createOrderItem = async (req, res) => {
     try {
         const { order_id, featured_product_id, product_id, quantity } = req.body;
 
-        if (!order_id || (!featured_product_id && !product_id) || !quantity) {
-            return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });
+        if (!order_id || !quantity) {
+            return res.status(400).json({ message: "os campos order_id e quantity são obrigatórios." });
+        }
+
+        if (!featured_product_id && !product_id) {
+            return res.status(400).json({ message: "É necessário fornecer featured_product_id ou product_id." });
         }
 
         const newOrderItem = await orderItemsModel.createOrderItem(order_id, featured_product_id, product_id, quantity);
