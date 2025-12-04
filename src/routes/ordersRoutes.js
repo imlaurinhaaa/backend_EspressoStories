@@ -7,6 +7,7 @@ const ordersController = require("../controllers/ordersController");
 router.get("/orders", ordersController.getOrders);
 router.get("/orders/:id", ordersController.getOrdersById);
 router.post("/orders", upload.none(), ordersController.createOrders);
+router.post('/finalize', upload.none(), ordersController.finalizeOrder); 
 router.put("/orders/:id", upload.none(), ordersController.updateOrder);
 router.delete("/orders/:id", ordersController.deleteOrder);
 router.get("/user/order/:userId", ordersController.getOrderWithItems);
