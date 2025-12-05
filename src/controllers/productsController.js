@@ -98,15 +98,45 @@ const createProduct = async (req, res) => {
 // Rota para atualizar os dados de um produto
 const updateProduct = async (req, res) => {
     try {
-        const { category_id, name, photo, description, price, inspiration, photo_inspiration } = req.body;
-        const updatedProduct = await productsModel.updateProduct(req.params.id, category_id, name, photo, description, price, inspiration, photo_inspiration);
+        console.log("Corpo da requisição de atualização:", req.body);
+        console.log("Arquivos recebidos na atualização:", req.files);
+
+        const { category_id, name, description, price, inspiration } = req.body;
+
+        // Captura das novas imagens, se enviadas
+        const photo = req.files?.photo ? req.files.photo[0].filename : null;
+        const photo_inspiration = req.files?.photo_inspiration ? req.files.photo_inspiration[0].filename : null;
+
+        // Normalização do preço, se fornecido
+        let priceNumber = null;
+        if (price !== undefined && price !== null && String(price).trim() !== "") {
+            const normalizedPriceString = String(price).replace(/\s+/g, '').replace(',', '.').replace(/[^0-9.]/g, '');
+            priceNumber = Number(normalizedPriceString);
+            
+            if (isNaN(priceNumber) || priceNumber <= 0) {
+                return res.status(400).json({
+                    message: "O campo 'price' deve conter um número válido maior que zero."
+                });
+            }
+        }
+
+        const updatedProduct = await productsModel.updateProduct(
+            req.params.id, 
+            category_id, 
+            name, 
+            photo, 
+            description, 
+            priceNumber, 
+            inspiration, 
+            photo_inspiration
+        );
 
         if (!updatedProduct) {
             return res.status(404).json({ message: "Produto não encontrado para atualização." });
         }
         res.status(200).json({ message: "Produto atualizado com sucesso.", updatedProduct });
     } catch (error) {
-        console.error(error);
+        console.error("❌ Erro ao atualizar produto:", error);
         res.status(500).json({ message: `Erro ao atualizar produto: ${error.message}` });
     }
 };

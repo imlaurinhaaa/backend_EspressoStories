@@ -122,5 +122,10 @@
         "Verifica",
         "Verifique",
         "virar"
-    ]
+    ],
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#5F091C",
+        "titleBar.activeBackground": "#850C27",
+        "titleBar.activeForeground": "#FFFBFC"
+    }
 }

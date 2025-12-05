@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const multer = require('multer');
-const upload = multer({ dest: "uploads/" });
+const upload = require('../config/upload');
 const productsController = require("../controllers/productsController");
 
 router.get("/products", productsController.getProducts);
