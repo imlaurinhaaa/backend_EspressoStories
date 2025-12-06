@@ -37,6 +37,17 @@ const createCart = async (req, res) => {
     }
 };
 
+const verifyCartExists = async (req, res) => { 
+    try {
+        const { user_id } = req.params;
+        const cart = await cartsModel.verifyCartExists(user_id);
+        return res.status(200).json({ message: "Verificação de carrinho concluída com sucesso.", cart });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Erro ao verificar carrinho."});
+    }
+}
+    
 const updateCart = async (req, res) => {
     try {
         const { user_id, branch_id } = req.body;
@@ -128,5 +139,6 @@ module.exports = {
     getCartWithItems,
     clearCart,
     increaseQty,
-    decreaseQty
+    decreaseQty,
+    verifyCartExists
 };
