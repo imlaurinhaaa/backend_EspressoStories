@@ -13,5 +13,6 @@ router.get("/users/cart/:userId", cartsController.getCartWithItems);
 router.delete("/cart/clear/:cart_id", cartsController.clearCart);
 router.put("/cart/increase", cartsController.increaseQty);
 router.put("/cart/decrease", cartsController.decreaseQty);
+router.get("/cart/verify/:user_id", cartsController.verifyCartExists);
 
 module.exports = router;

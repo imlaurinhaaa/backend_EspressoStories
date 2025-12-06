@@ -11,6 +11,7 @@ const getCartById = async (id) => {
     return result.rows[0];
 };
 
+
 const createCart = async (user_id, branch_id) => {
     const result = await pool.query(
         "INSERT INTO carts (user_id, branch_id) VALUES ($1, $2) RETURNING *", 
@@ -18,6 +19,23 @@ const createCart = async (user_id, branch_id) => {
     );
     return result.rows[0];
 };
+
+const verifyCartExists = async (user_id) => {
+    const result = await pool.query(
+        "SELECT * FROM carts WHERE user_id = $1",
+        [user_id]
+    );
+
+    if (result.rowCount === 0) {
+        //criar um carrinho novo para o user_id
+        const newCart = await createCart(user_id, 1);
+        
+        return newCart;
+    }
+
+    return result.rows[0];
+}
+
 
 const updateCart = async (id, user_id, branch_id) => {
     const currentCart = await pool.query("SELECT * FROM carts WHERE id = $1", [id]);
@@ -122,5 +140,6 @@ module.exports = {
     getCartWithItems,
     clearCart,
     increaseQty,
-    decreaseQty
+    decreaseQty,
+    verifyCartExists
 };

@@ -14,7 +14,9 @@ const getUsersAddresses = async (req, res) => {
 
 const getUserAddresses = async (req, res) => {
     try {
-        const { user_id } = req.params;
+        const { user_id } = req.query;
+
+        console.log("Parâmetro user_id recebido:", user_id);
 
         if (!user_id) {
             return res.status(400).json({ message: "O parâmetro user_id é obrigatório." });
